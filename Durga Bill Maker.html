@@ -110,6 +110,7 @@ body.lt .lwrap{display:block}
 <body>
 <div class="bar">
   <button class="pri" onclick="window.print()">Print / Save PDF</button>
+  <button class="pri" onclick="downloadPDF()">⬇ Download PDF</button>
   <button onclick="addItem()">+ Add item</button>
   <button class="pri" onclick="$('up').click()">⬆ Upload bill (PDF / Word)</button><input id="up" type="file" accept=".pdf,.docx" hidden onchange="importFile(this)">
   <span id="imp" style="font-size:13px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"></span>
@@ -779,6 +780,52 @@ rp=function(){
 };
 
 window.addEventListener('beforeprint',()=>{if(!document.body.classList.contains('lt'))paginate();});
+
+
+async function downloadPDF(){
+  const btn=[...document.querySelectorAll('.bar button')].find(b=>b.textContent.includes('Download PDF'));
+  const oldText=btn?btn.textContent:'';
+  const isLetter=document.body.classList.contains('lt');
+  const targets=isLetter?[$('lp')]:[];
+  const oldZoom=[];
+  try{
+    if(btn){btn.disabled=true;btn.textContent='Preparing PDF…';}
+    // Load the two rendering libraries directly; avoid capturing an off-screen clone,
+    // which can produce a blank canvas in some browsers.
+    await loadJS('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+    await loadJS('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+    if(!isLetter){
+      paginate();
+      targets.push(...document.querySelectorAll('.wrap .paper'));
+    }
+    if(!targets.length)throw new Error('No bill page found');
+    const JsPDF=window.jspdf&&window.jspdf.jsPDF;
+    if(!window.html2canvas||!JsPDF)throw new Error('PDF libraries unavailable');
+    const inv=(F.invno||'Durga-Bill').replace(/[^\w-]+/g,'_');
+    const pdf=new JsPDF({unit:'mm',format:'a4',orientation:'portrait',compress:true});
+    for(let i=0;i<targets.length;i++){
+      const el=targets[i];
+      oldZoom.push({el,zoom:el.style.zoom,transform:el.style.transform,margin:el.style.margin});
+      el.style.zoom='1';el.style.transform='none';el.style.margin='0';
+      const canvas=await window.html2canvas(el,{
+        scale:2,backgroundColor:'#ffffff',useCORS:true,logging:false,
+        width:el.scrollWidth,height:el.scrollHeight,
+        windowWidth:Math.max(document.documentElement.clientWidth,el.scrollWidth),
+        windowHeight:Math.max(window.innerHeight,el.scrollHeight)
+      });
+      if(!canvas.width||!canvas.height)throw new Error('The bill page could not be rendered');
+      if(i>0)pdf.addPage('a4','portrait');
+      pdf.addImage(canvas.toDataURL('image/jpeg',0.98),'JPEG',0,0,210,297,undefined,'FAST');
+    }
+    pdf.save((isLetter?'Payment-Letter_':'Invoice_')+inv+'.pdf');
+  }catch(err){
+    console.error('PDF download failed:',err);
+    alert('PDF could not be created. Please check your internet connection and try again.');
+  }finally{
+    oldZoom.forEach(x=>{x.el.style.zoom=x.zoom;x.el.style.transform=x.transform;x.el.style.margin=x.margin;});
+    if(btn){btn.disabled=false;btn.textContent=oldText;}
+  }
+}
 
 load();paginate();
 </script>
