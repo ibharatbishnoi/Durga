@@ -110,6 +110,7 @@ body.lt .lwrap{display:block}
 <body>
 <div class="bar">
   <button class="pri" onclick="window.print()">Print / Save PDF</button>
+  <button class="pri" id="pdfBtn" onclick="downloadPDF()">⬇ Download PDF</button>
   <button onclick="addItem()">+ Add item</button>
   <button class="pri" onclick="$('up').click()">⬆ Upload bill (PDF / Word)</button><input id="up" type="file" accept=".pdf,.docx" hidden onchange="importFile(this)">
   <span id="imp" style="font-size:13px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"></span>
@@ -777,6 +778,62 @@ rp=function(){
   const bar=$('pc').firstElementChild,b=document.createElement('button');
   b.dataset.a='tab';b.dataset.id='ewb';b.textContent='E-way bill';bar.insertBefore(b,bar.querySelector('span'));
 };
+
+
+/* ---------- Direct PDF download: render the actual visible invoice pages ---------- */
+async function downloadPDF(){
+  const btn=$('pdfBtn'),label=btn.textContent,isLetter=document.body.classList.contains('lt');
+  const changed=[];
+  try{
+    btn.disabled=true;btn.textContent='Preparing PDF…';
+    await loadJS('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+    await loadJS('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+    if(!window.html2canvas||!window.jspdf||!window.jspdf.jsPDF)throw new Error('PDF tools did not load. Check your internet connection.');
+    if(!isLetter)paginate();
+    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+    if(document.fonts&&document.fonts.ready)await document.fonts.ready;
+    const targets=isLetter?[$('lp')]:[...document.querySelectorAll('.wrap .paper')];
+    const usable=targets.filter(el=>el&&el.getBoundingClientRect().width>0&&el.getBoundingClientRect().height>0);
+    if(!usable.length)throw new Error('No visible bill page was found. Switch back to the bill and try again.');
+    const PDF=window.jspdf.jsPDF;
+    const pdf=new PDF({orientation:'portrait',unit:'mm',format:'a4',compress:true});
+    for(let i=0;i<usable.length;i++){
+      const el=usable[i];
+      changed.push({el,zoom:el.style.zoom,transform:el.style.transform,margin:el.style.margin});
+      el.style.setProperty('zoom','1','important');
+      el.style.setProperty('transform','none','important');
+      el.style.setProperty('margin','0','important');
+      const canvas=await window.html2canvas(el,{
+        scale:2,backgroundColor:'#ffffff',useCORS:true,allowTaint:false,
+        logging:false,windowWidth:1200,windowHeight:1600,
+        width:Math.ceil(el.getBoundingClientRect().width),
+        height:Math.ceil(el.getBoundingClientRect().height),
+        scrollX:0,scrollY:0
+      });
+      if(canvas.width<100||canvas.height<100)throw new Error('The bill page could not be captured.');
+      // Guard against a white/empty canvas instead of silently saving a blank PDF.
+      const ctx=canvas.getContext('2d',{willReadFrequently:true});
+      const pixels=ctx.getImageData(0,0,canvas.width,canvas.height).data;
+      let ink=0;
+      for(let j=0;j<pixels.length;j+=1600){
+        if(pixels[j]<245||pixels[j+1]<245||pixels[j+2]<245){ink++;if(ink>8)break;}
+      }
+      if(ink<3)throw new Error('The PDF preview came out blank. Please try again after the bill is fully visible.');
+      if(i>0)pdf.addPage('a4','portrait');
+      pdf.addImage(canvas.toDataURL('image/jpeg',0.96),'JPEG',0,0,210,297,undefined,'FAST');
+    }
+    const invoice=(F.invno||'Durga-Bill').replace(/[^\w-]+/g,'_');
+    pdf.save((isLetter?'Payment-Letter_':'Invoice_')+invoice+'.pdf');
+  }catch(err){
+    console.error('PDF download failed:',err);
+    alert(err&&err.message?err.message:'Could not create the PDF. Please try again.');
+  }finally{
+    changed.forEach(x=>{
+      x.el.style.zoom=x.zoom;x.el.style.transform=x.transform;x.el.style.margin=x.margin;
+    });
+    btn.disabled=false;btn.textContent=label;
+  }
+}
 
 window.addEventListener('beforeprint',()=>{if(!document.body.classList.contains('lt'))paginate();});
 
