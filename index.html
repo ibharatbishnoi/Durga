@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tax Invoice – Durga Engineering Services</title>
+<style>
+:root{--bg:#e9ecef;--bar:#1f2933;--bar-t:#fff;--btn:#2f6f5e;--btn-t:#fff;--hint:#52606d;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15191d;--bar:#0d1114;--hint:#9aa5b1}}
+:root[data-theme="dark"]{--bg:#15191d;--bar:#0d1114;--hint:#9aa5b1}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);font-family:Arial,Helvetica,sans-serif;color:#000}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bar);color:var(--bar-t);display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 14px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bar);z-index:10}
+.bar button,.bar input[type=date]{font:inherit;font-size:14px;padding:7px 12px;border-radius:6px;border:1px solid #52606d;background:#323f4b;color:#fff;cursor:pointer}
+.bar button.pri{background:var(--btn);border-color:var(--btn);color:var(--btn-t);font-weight:700}
+.bar label{font-size:14px;display:flex;gap:6px;align-items:center}
+.hint{font-size:12px;color:var(--hint);text-align:center;padding:8px 12px}
+.wrap{overflow-x:auto;padding:10px}
+.paper{width:210mm;height:297mm;margin:0 auto 14px;background:#fff;padding:7mm 8mm;font-size:11px;line-height:1.25;display:flex;flex-direction:column;overflow:hidden}
+.title{text-align:center;font-weight:700;font-size:13px;margin-bottom:2px;flex-shrink:0}
+.inv{border:1px solid #000;display:flex;flex-direction:column;flex:1;min-height:0}
+[contenteditable]{outline:none;white-space:pre-wrap;min-width:6px}
+[contenteditable]:hover,[contenteditable]:focus{background:#fff6c9}
+.top{display:flex;border-bottom:1px solid #000;flex-shrink:0}
+.left{flex:0 0 54.3%;border-right:1px solid #000}
+.right{flex:1;display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:minmax(34px,auto)}
+.right>div{border-bottom:1px solid #000;padding:2px 4px}
+.right>div:nth-child(odd){border-right:1px solid #000}
+.right>.last{grid-column:1/3;border-bottom:0;border-right:0;padding:2px 4px}
+.right .l{display:block;font-size:10.5px}
+.right .v{display:block;font-weight:700;min-height:12px}
+.box{padding:3px 5px;border-bottom:1px solid #000}
+.box:last-child{border-bottom:0}
+.box .l{font-size:10.5px;display:block}
+.box b{font-size:11.5px}
+.row{display:grid;grid-template-columns:26px 1fr 72px 44px 84px 62px 36px 44px 92px}
+.row>div{padding:1px 4px;position:relative}
+.tb{flex:1;min-height:0;display:flex;flex-direction:column;position:relative}.stb,.sbot{flex-shrink:0}.cont{border-top:1px solid #000;text-align:right;padding:3px 10px;font-size:11px}.lines{position:absolute;inset:0;display:grid;grid-template-columns:26px 1fr 72px 44px 84px 62px 36px 44px 92px;pointer-events:none}.lines i{border-right:1px solid #000}.lines i:last-child{border-right:0}
+.head{border-bottom:1px solid #000;text-align:center;font-size:10.5px;align-items:center}
+.head>div{padding:3px 2px}
+.items{flex:1;min-height:0;overflow:hidden;padding-bottom:6px}
+.it .c1{text-align:right}
+.it .nm{font-weight:700;font-size:12px;display:block}
+.it .ds{font-style:italic;font-size:10.5px;display:block;padding-left:4px}
+.it .q{font-weight:700;font-size:12px;text-align:right}
+.it .r,.it .a{text-align:right}
+.it .a{font-weight:700;font-size:12px}
+.it .g,.it .h{font-size:11px}
+.x{position:absolute;left:3px;top:1px;width:18px;height:18px;border-radius:50%;border:0;background:#c0392b;color:#fff;font-size:13px;line-height:17px;cursor:pointer;padding:0}
+.sum{display:grid;grid-template-columns:26px 1fr 72px 44px 84px 62px 36px 44px 92px;margin-top:4px}
+.sum .lb{grid-column:2;text-align:right;font-weight:700;font-style:italic;padding:1px 6px}
+.sum .vl{grid-column:9;text-align:right;font-weight:700;padding:1px 4px}.sum .vl:nth-child(2){border-top:1px solid #000;margin-top:6px;padding-top:3px}
+.grow{flex:1}
+.tot{display:grid;grid-template-columns:26px 1fr 72px 44px 84px 62px 36px 44px 92px;border-top:1px solid #000;border-bottom:1px solid #000;align-items:center;padding:3px 0}
+.tot .tq{font-weight:700;font-size:12px;text-align:right;padding-right:4px;grid-column:5}
+.tot .tl{text-align:right;padding-right:10px;grid-column:2}
+.tot .ta{text-align:right;font-weight:700;font-size:13px;padding-right:4px;grid-column:9;white-space:nowrap}
+.foot{display:flex}
+.foot>div{flex:1}
+.foot .lf{border-right:1px solid #000;padding:2px 5px;display:flex;flex-direction:column}
+.foot .rf{display:flex;flex-direction:column}
+.eoe{float:right;font-style:italic;font-size:10px}
+.words{font-weight:700;font-size:11.5px;margin:2px 0 8px;min-height:30px}
+.bank{padding:2px 5px;border-bottom:1px solid #000}
+.bank table{border-collapse:collapse}.bank td{padding:0 3px 0 0;vertical-align:top}
+.sign{padding:3px 5px;text-align:right;flex:1;display:flex;flex-direction:column;justify-content:space-between;min-height:70px}
+.sign b{font-size:10.5px}
+.small{font-size:10.5px}
+.note{text-align:center;font-size:10px;margin:6px 0 0;flex-shrink:0}
+.nopr{display:inline}
+#pn{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100;display:none;justify-content:center;align-items:flex-start;overflow:auto;padding:16px 8px}
+#pn.on{display:flex}
+#pc{background:#fff;color:#111;max-width:680px;width:100%;border-radius:10px;padding:14px;font-size:14px}
+#pc button,#pc .fl{font:inherit;font-size:13px;padding:5px 9px;margin:2px;border-radius:6px;border:1px solid #9aa5b1;background:#f1f3f5;color:#111;cursor:pointer;display:inline-block}
+#pc button.pri{background:#2f6f5e;color:#fff;border-color:#2f6f5e}
+#pc .r{display:flex;justify-content:space-between;gap:8px;align-items:center;border-bottom:1px solid #ddd;padding:6px 0;flex-wrap:wrap}
+#sg{position:fixed;z-index:120;background:#fff;color:#111;border:1px solid #888;border-radius:6px;box-shadow:0 4px 14px rgba(0,0,0,.25);display:none;max-width:90vw;font-size:13px}
+#sg .o{padding:6px 10px;cursor:pointer;border-bottom:1px solid #eee}#sg .o:hover{background:#fff6c9}
+body.lt .wrap{display:none!important}
+.lwrap{display:none;overflow-x:auto;padding:10px}
+body.lt .lwrap{display:block}
+.lnote{width:210mm;margin:0 auto 8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px;color:var(--hint)}
+.lnote button{font:inherit;font-size:13px;padding:5px 10px;border-radius:6px;border:1px solid #52606d;background:#323f4b;color:#fff;cursor:pointer}
+.lnote button.pri{background:var(--btn);border-color:var(--btn)}
+.lpaper{width:210mm;min-height:297mm;margin:0 auto 14px;background:#fff;color:#000;padding:25.4mm;font-family:Calibri,Carlito,Arial,sans-serif;font-size:11pt;line-height:1.15}
+.lpaper p{margin:0 0 10pt}
+.lpaper .ld{text-align:right;margin:38mm 0 23mm}
+.lpaper .li{margin-left:.25in}
+.lpaper .fi{text-indent:.4in}
+.lpaper table{border-collapse:collapse;width:100%;font-size:10pt}
+.lpaper td{border:1px solid #000;padding:1px 5px}
+.lpaper td:nth-child(1){width:17.4%}.lpaper td:nth-child(2){width:23%}.lpaper td:nth-child(3){width:20.5%}.lpaper td:nth-child(4){width:19.4%}
+.lpaper .ph{background:#fff6c9}
+[contenteditable]:focus{outline:none}
+@media (max-width:820px){.paper,.lpaper{zoom:.5}.lnote{width:auto}}
+@media print{
+ @page{size:A4;margin:0}
+ html,body{background:#fff}
+ :root{padding:0}
+ body::before{display:none}
+ .bar,.hint,.x,#pn,#sg,.lnote{display:none!important}.lwrap{padding:0}.lpaper{margin:0;height:297mm;min-height:0;overflow:hidden;zoom:1!important}.lpaper .ph{background:none}
+ .wrap{padding:0;overflow:visible}
+ .paper{zoom:1!important;margin:0;width:210mm;height:297mm;padding:7mm 8mm;break-after:page;page-break-after:always}.paper:last-child{break-after:auto;page-break-after:auto}
+ [contenteditable]:hover,[contenteditable]:focus{background:none}
+}
+</style>
+</head>
+<body>
+<div class="bar">
+  <button class="pri" onclick="window.print()">Print / Save PDF</button>
+  <button onclick="addItem()">+ Add item</button>
+  <button class="pri" onclick="$('up').click()">⬆ Upload bill (PDF / Word)</button><input id="up" type="file" accept=".pdf,.docx" hidden onchange="importFile(this)">
+  <span id="imp" style="font-size:13px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"></span>
+  <button id="lbtn" onclick="toggleLetter()">Payment letter</button><button onclick="openPn('ewb')">E-way bill JSON</button><button onclick="openPn('bills')">Bills</button><button onclick="openPn('cat')">Items &amp; parties</button>
+  <label>Date <input type="date" id="dp" onchange="setDate(this.value)"></label>
+  <label><input type="checkbox" id="ro" checked onchange="calc();save()"> Round off</label>
+  <label>GST <select id="gt" onchange="calc();save()" style="font:inherit;font-size:14px;padding:6px;border-radius:6px;background:#323f4b;color:#fff;border:1px solid #52606d"><option value="cs">CGST + SGST</option><option value="ig">IGST</option></select></label>
+  <button onclick="newBill()">New bill</button>
+</div>
+<div class="hint">Use “Upload bill” to take the items and Ship to / Bill to from a PDF or Word bill. Tap any text on the bill to edit it. Amounts, GST, round off and amount in words update by themselves. If the items don’t fit on one A4 page, the bill continues on the next page automatically (with the same header), and the totals come on the last page. Use the red × at the left of each row’s Amount to remove it.</div>
+
+<div class="wrap"><div class="paper" id="paper">
+<div class="title">Tax Invoice</div>
+<div class="inv">
+ <div class="top">
+  <div class="left">
+   <div class="box"><b contenteditable data-k="co" style="font-size:12px;display:block">Durga Engineering Services</b><span contenteditable data-k="coadd" style="display:block">Ho 3A SAMTA BIKANER, Rajasthan, 344031
+Code 08 GSTIN – 08AAJFD4318H1ZH
+Branch – Durga Engineering Services
+Near Bhagat Singh Circle Balotra 344032
+Code 08 GSTIN – 08AAJFD4318H1ZH
+M. 7597577129</span></div>
+   <div class="box"><span class="l">Consignee (Ship to)</span><b contenteditable data-k="shipn" style="display:block">Bikaner Machinery Store</b><span contenteditable data-k="shipa" style="display:block">07, G.S Road Bikaner (Raj).
+Bikaner - 334001, RAJASTHAN,
+GSTIN/UIN       : 08AAIFB2347K1ZC
+State Name      : Rajasthan, Code : 08</span></div>
+   <div class="box"><span class="l">Buyer (Bill to)</span><b contenteditable data-k="billn" style="display:block">Bikaner Machinery Store</b><span contenteditable data-k="billa" style="display:block">07, G.S Road Bikaner (Raj).
+Bikaner - 334001, RAJASTHAN,
+GSTIN/UIN       : 08AAIFB2347K1ZC
+State Name      : Rajasthan, Code : 08</span></div>
+  </div>
+  <div class="right">
+   <div><span class="l">Invoice No.</span><span class="v" contenteditable data-k="invno">2026-27/00145</span></div>
+   <div><span class="l">Dated</span><span class="v" contenteditable data-k="date">11-Nov-26</span></div>
+   <div><span class="l">Delivery Note</span><span class="v" contenteditable data-k="dn"></span></div>
+   <div><span class="l">Mode/Terms of Payment</span><span class="v" contenteditable data-k="mop"></span></div>
+   <div><span class="l">Reference No. &amp; Date.</span><span class="v" contenteditable data-k="ref"></span></div>
+   <div><span class="l">Other References</span><span class="v" contenteditable data-k="oref"></span></div>
+   <div><span class="l">Buyer’s Order No.</span><span class="v" contenteditable data-k="bono"></span></div>
+   <div><span class="l">Dated</span><span class="v" contenteditable data-k="bodt"></span></div>
+   <div><span class="l">Dispatch Doc No.</span><span class="v" contenteditable data-k="ddn"></span></div>
+   <div><span class="l">Delivery Note Date</span><span class="v" contenteditable data-k="dndt"></span></div>
+   <div><span class="l">Dispatched through</span><span class="v" contenteditable data-k="dthr"></span></div>
+   <div><span class="l">Destination</span><span class="v" contenteditable data-k="dest"></span></div>
+   <div><span class="l">Bill of Lading/LR-RR No.</span><span class="v" contenteditable data-k="lr"></span></div>
+   <div><span class="l">Motor Vehicle No.</span><span class="v" contenteditable data-k="veh"></span></div>
+   <div class="last"><span class="l">Terms of Delivery</span><span class="v" contenteditable data-k="tod"></span></div>
+  </div>
+ </div>
+
+ <div class="tb"><div class="lines"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+ <div class="row head"><div>Sl No.</div><div>Description of Goods</div><div>HSN/SAC</div><div>GST Rate</div><div>Quantity</div><div>Rate</div><div>per</div><div>Disc. %</div><div>Amount</div></div>
+ <div class="items" id="items"></div>
+ <div class="sum" id="sum"></div>
+ <div class="grow"></div>
+ <div class="tot"><span class="tl">Total</span><span class="tq" id="tq"></span><span class="ta" id="ta"></span></div>
+ </div>
+ <div class="foot">
+  <div class="lf">
+   <div class="small"><span>Amount Chargeable (in words)</span><span class="eoe">E. &amp; O.E</span></div>
+   <div class="words" id="words"></div>
+   <div class="small" style="margin-top:auto">Company’s PAN <span style="margin-left:50px">: <b contenteditable data-k="pan">AAJFD4318H</b></span></div>
+   <div class="small" style="margin-top:6px;border-top:1px solid #000;padding-top:2px"><u>Declaration</u><br><span contenteditable data-k="decl">We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct.</span></div>
+  </div>
+  <div class="rf">
+   <div class="bank small">Company’s Bank Details
+    <table>
+     <tr><td>Bank Name</td><td>:</td><td><b contenteditable data-k="bank">Canara CA A/c No. 3382214000036</b></td></tr>
+     <tr><td>A/c No.</td><td>:</td><td><b contenteditable data-k="acno">3382214000036</b></td></tr>
+     <tr><td>Branch &amp; IFS Code</td><td>:</td><td><b contenteditable data-k="ifsc">Mahaveer Nagar Barmer &amp; CNRB0003382</b></td></tr>
+    </table>
+   </div>
+   <div class="sign"><b contenteditable data-k="forco">for M/s Durga Engineering Services</b><span class="small">Authorised Signatory</span></div>
+  </div>
+ </div>
+</div>
+<div class="note">SUBJECT TO BIKANER JURISDICTION<br><br>This is a Computer Generated Invoice</div>
+</div></div>
+
+<div class="lwrap" id="lt"><div class="lnote" id="lnote"></div><div class="lpaper" id="lp"></div></div>
+<div id="pn"><div id="pc"></div></div><div id="sg"></div>
+<script>
+const KEY='durga_bill_v1';
+const BILL_ID='b3'; // changes each time a new bill is prepared from an uploaded document
+const DEF=[{name:'GI Bolt Nut',desc:'8x20mm +2 Plain Washer + 1Spring washer',hsn:'73181500',gst:'18',qty:'6000',rate:'5.64',per:'Nos',disc:''},
+{name:'SS Bolt Nut',desc:'8*20mm +2 Plain Washer +1 Spring Washer',hsn:'73181500',gst:'18',qty:'2000',rate:'9.40',per:'Nos',disc:''},
+{name:'GI Bolt Nut',desc:'10x40mm +2 Plain Washer + 1Spring washer',hsn:'73181500',gst:'18',qty:'7000',rate:'8.46',per:'Nos',disc:''}];
+const $=id=>document.getElementById(id), q=s=>document.querySelector(s);
+const num=s=>{const n=parseFloat(String(s||'').replace(/[^0-9.\-]/g,''));return isNaN(n)?0:n};
+const fmt=n=>n.toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fq=n=>n.toLocaleString('en-IN',{maximumFractionDigits:3});
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+// capture the layout pieces from the initial markup
+let F={};document.querySelectorAll('[data-k]').forEach(e=>F[e.dataset.k]=e.innerText.replace(/\n$/,''));
+const T={top:q('.top').outerHTML,lines:q('.lines').outerHTML,head:q('.head').outerHTML,tot:q('.tot').outerHTML,foot:q('.foot').outerHTML,note:q('.note').outerHTML};
+const PAGES=q('.wrap'); PAGES.innerHTML='';
+Object.assign(F,{invno:'2026-27/00156',date:'22-Nov-26',dn:'',mop:'',ref:'',oref:'',bono:'ZNB - 6000048596',bodt:'03-Nov-26',ddn:'',dndt:'',dthr:'',dest:'',lr:'',veh:'RJ04GB4748',tod:'',shipn:'Jakson Green Limited',shipa:'ENGIE LUCEO 375W 300MW, MANDALIYA\nVILLAGE, SHIV BARMER, 344701\nGSTIN/UIN       : 08AAFCJ6350C1ZR\nState Name      : Rajasthan, Code : 08',billn:'Jakson Green Limited',billa:'Kuber Complex scheme Vaishali Nagar,\nGandhi Path 6th Floor , Unit No. 601 , Mall of,\nJaipur, Jaipur Rajasthan-302021,\nGSTIN/UIN       : 08AAFCJ6350C1ZR\nState Name      : Rajasthan, Code : 08'});
+let items=[{name:'Foundation Bolt',desc:'Grade 4.6 (650mm x M20)',hsn:'73181500',gst:'18',qty:'160',rate:'320.00',per:'Nos',disc:''}];
+const applyF=r=>r.querySelectorAll('[data-k]').forEach(e=>e.textContent=F[e.dataset.k]??'');
+const amt=it=>Math.round(num(it.qty)*num(it.rate)*(1-num(it.disc)/100)*100)/100;
+
+function rowHTML(i){const it=items[i];return `<div class="row it" data-i="${i}">
+ <div class="c1">${i+1}</div>
+ <div><b class="nm" contenteditable data-f="name">${esc(it.name)}</b><span class="ds" contenteditable data-f="desc">${esc(it.desc)}</span></div>
+ <div class="h" contenteditable data-f="hsn">${esc(it.hsn)}</div>
+ <div class="g"><span contenteditable data-f="gst" style="display:inline-block">${esc(it.gst)}</span> %</div>
+ <div class="q"><span contenteditable data-f="qty" data-n="1" style="display:inline-block">${esc(it.qty?fq(num(it.qty)):'')}</span> <span class="u">${esc(it.per)}</span></div>
+ <div class="r" contenteditable data-f="rate">${esc(it.rate)}</div>
+ <div contenteditable data-f="per">${esc(it.per)}</div>
+ <div class="r" contenteditable data-f="disc">${esc(it.disc)}</div>
+ <div class="a"><button class="x" onclick="delItem(${i})" title="Remove item">×</button><span class="av">${(it.qty||it.rate)?fmt(amt(it)):''}</span></div></div>`}
+
+function newPage(no){
+  const d=document.createElement('div');d.className='paper';
+  d.innerHTML=`<div class="title">${no>1?'Tax Invoice(Page '+no+')':'Tax Invoice'}</div><div class="inv">${T.top}<div class="tb">${T.lines}${T.head}<div class="items"></div><div class="stb"></div></div><div class="sbot"></div></div>${T.note}`;
+  PAGES.appendChild(d);applyF(d);
+  return {paper:d,items:d.querySelector('.items'),stb:d.querySelector('.stb'),sbot:d.querySelector('.sbot'),no};
+}
+function setTail(p,final){
+  const sm=p.items.querySelector('.sum');if(sm)sm.remove();
+  if(final){p.stb.innerHTML=T.tot;p.sbot.innerHTML=T.foot;applyF(p.paper);
+    const s=document.createElement('div');s.className='sum';p.items.appendChild(s);calc();}
+  else{p.stb.innerHTML='';p.sbot.innerHTML=`<div class="cont">continued to page number ${p.no+1}</div>`;}
+}
+const ov=p=>p.items.scrollHeight>p.items.clientHeight+1;
+
+function paginate(){
+  PAGES.innerHTML='';
+  const n=items.length;let i=0,no=0;
+  if(!n){const p=newPage(1);setTail(p,true);return;}
+  while(i<n){
+    const p=newPage(++no);setTail(p,false);let k=0;
+    while(i+k<n){
+      p.items.insertAdjacentHTML('beforeend',rowHTML(i+k));
+      if(ov(p)&&k>0){p.items.lastElementChild.remove();break;}
+      k++;
+    }
+    if(i+k>=n){
+      setTail(p,true);
+      if(!ov(p)||k<=1){i=n;break;}
+      setTail(p,false);
+      i+=k;
+      const f=newPage(++no);setTail(f,true);
+      break;
+    }
+    i+=k;
+  }
+  calc();
+}
+
+function totals(){
+  let sub=0,qty=0,g={};
+  items.forEach(it=>{const r=amt(it);sub+=r;qty+=num(it.qty);const k=num(it.gst);g[k]=(g[k]||0)+r*k/200;});
+  sub=Math.round(sub*100)/100;
+  let half=0;Object.keys(g).forEach(k=>{if(+k>0)half+=g[k]});half=Math.round(half*100)/100;
+  let tax=0,h=`<div class="lb"></div><div class="vl">${fmt(sub)}</div>`;
+  if($('gt').value==='ig'){const v=Math.round(half*200)/100;tax=v;h+=`<div class="lb">IGST</div><div class="vl">${fmt(v)}</div>`;}
+  else{tax=half*2;h+=`<div class="lb">CGST</div><div class="vl">${fmt(half)}</div><div class="lb">SGST</div><div class="vl">${fmt(half)}</div>`;}
+  let tot=sub+tax,ro=0;const on=$('ro').checked;
+  if(on){ro=Math.round((Math.round(tot)-tot)*100)/100;tot=Math.round(tot);h+=`<div class="lb">Round Off</div><div class="vl">${ro<0?'-':''}${fmt(Math.abs(ro))}</div>`;}
+  tot=Math.round(tot*100)/100;
+  return {h,tot,qty};
+}
+function calc(){
+  document.querySelectorAll('.row.it').forEach(r=>{const it=items[+r.dataset.i];if(it)r.querySelector('.av').textContent=(it.qty||it.rate)?fmt(amt(it)):'';});
+  const s=q('.sum');if(!s)return;
+  const t=totals();s.innerHTML=t.h;
+  const same=items.length&&items.every(x=>x.per===items[0].per);
+  $('tq').textContent=fq(t.qty)+' '+(same?items[0].per:'');
+  $('ta').textContent='Rs. '+fmt(t.tot);{const e=$('ta');let z=13;e.style.fontSize=z+'px';while(e.scrollWidth>e.clientWidth+0.5&&z>8){z-=0.5;e.style.fontSize=z+'px';}}
+  $('words').textContent='INR '+words(t.tot);
+}
+const ones=['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
+const tens=['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+const two=n=>n<20?ones[n]:tens[Math.floor(n/10)]+(n%10?' '+ones[n%10]:'');
+const three=n=>(n>=100?ones[Math.floor(n/100)]+' Hundred'+(n%100?' ':''):'')+(n%100?two(n%100):'');
+function words(v){
+  let r=Math.floor(v),p=Math.round((v-r)*100);
+  if(!r&&!p)return 'Zero Only';
+  let s=[];
+  for(const [d,n] of [[10000000,'Crore'],[100000,'Lakh'],[1000,'Thousand']]){const x=Math.floor(r/d);if(x){s.push(two(x)+' '+n);r%=d}}
+  if(r)s.push(three(r));
+  let out=s.join(' ');
+  if(p)out+=(out?' and ':'')+two(p)+' Paise';
+  return out+' Only';
+}
+function addItem(){
+  const l=items[items.length-1];
+  items.push({name:'',desc:'',hsn:l?l.hsn:'',gst:l?l.gst:'18',qty:'',rate:'',per:'Nos',disc:''});
+  paginate();save();
+  const r=document.querySelectorAll('.row.it');const e=r[r.length-1];
+  if(e){e.scrollIntoView({block:'center'});e.querySelector('[data-f=name]').focus();}
+}
+function delItem(i){items.splice(i,1);paginate();save()}
+function newBill(){ask('Start a new bill? Items and invoice details (not your company details) will be cleared.',doNewBill)}
+function doNewBill(){
+  curId=null;
+  items=[];['invno','date','dn','mop','ref','oref','bono','bodt','ddn','dndt','dthr','dest','lr','veh','tod'].forEach(k=>F[k]='');
+  setDate(new Date().toISOString().slice(0,10),true);addItem();
+}
+function setDate(v,skip){
+  if(!v)return;const d=new Date(v+'T00:00:00');
+  const m=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  F.date=String(d.getDate()).padStart(2,'0')+'-'+m[d.getMonth()]+'-'+String(d.getFullYear()).slice(2);
+  document.querySelectorAll('[data-k=date]').forEach(e=>e.textContent=F.date);save();
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify({f:F,items,ro:$('ro').checked,gt:$('gt').value,a141:1,bid:BILL_ID,cur:curId}));}catch(e){}}
+function load(){
+  try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(!s)return;if(s.bid!==BILL_ID)return;
+    if(s.f)Object.assign(F,s.f);if(Array.isArray(s.items))items=s.items;$('ro').checked=s.ro!==false;if(s.gt)$('gt').value=s.gt;curId=s.cur||null;if(!s.a141)items.push({name:'GI Bolt Nut',desc:'10x40mm +2 Plain Washer + 1Spring washer',hsn:'73181500',gst:'18',qty:'7000',rate:'8.46',per:'Nos',disc:''});}catch(e){}
+}
+document.addEventListener('input',e=>{
+  const t=e.target,row=t.closest&&t.closest('.row.it');
+  if(row){const i=+row.dataset.i,f=t.dataset.f;
+    if(f){items[i][f]=t.innerText.replace(/\n/g,' ').trim();if(f==='per')row.querySelector('.u').textContent=items[i].per;calc();}}
+  else if(t.dataset&&t.dataset.k){F[t.dataset.k]=t.innerText.replace(/\n$/,'');
+    document.querySelectorAll(`[data-k="${t.dataset.k}"]`).forEach(x=>{if(x!==t)x.textContent=F[t.dataset.k]});}
+  save();
+});
+document.addEventListener('focusout',e=>{
+  const t=e.target;
+  if(t.dataset&&t.dataset.n)t.textContent=t.textContent.trim()?fq(num(t.textContent)):'';
+  setTimeout(()=>{if([...document.querySelectorAll('.items')].some(x=>x.scrollHeight>x.clientHeight+1))paginate();},0);
+});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.closest&&e.target.closest('.row.it'))e.preventDefault()});
+/* ---------- Upload a bill (PDF / Word): take its items + Ship to / Bill to ---------- */
+const loadJS=u=>new Promise((ok,no)=>{if(document.querySelector('script[src="'+u+'"]'))return ok();const s=document.createElement('script');s.src=u;s.onload=ok;s.onerror=()=>no(new Error('Could not load the file reader. Check your internet connection and try again.'));document.head.appendChild(s);});
+const say=m=>{$('imp').textContent=m};
+function ask(msg,yes){
+  const b=$('imp');b.innerHTML='';
+  const s=document.createElement('span'),y=document.createElement('button'),n=document.createElement('button');
+  s.textContent=msg;y.textContent='Yes, replace';y.className='pri';n.textContent='Cancel';
+  y.onclick=()=>{b.innerHTML='';yes()};n.onclick=()=>{b.innerHTML=''};
+  b.append(s,y,n);
+}
+const mkItem=(name,desc,hsn,gst,qty,rate,per,disc,amt)=>({name:name.trim(),desc:(desc||'').replace(/\s+/g,' ').trim(),hsn:hsn,gst:String(parseFloat(gst)),qty:String(qty).replace(/,/g,''),rate:String(rate).replace(/,/g,''),per:per||'Nos',disc:disc?String(parseFloat(disc)):'',_a:num(amt)});
+const ROW=/^(\d{1,3})\s+(.+?)\s+(\d{4,8})\s+(\d+(?:\.\d+)?)\s*%\s+([\d,]*\.?\d+)\s+([A-Za-z.]+)\s+([\d,]*\.?\d+)\s+([A-Za-z.]+)\s+(?:(\d+(?:\.\d+)?)\s*%?\s+)?([\d,]+\.\d{2})$/;
+function partyFrom(lines){
+  const iS=lines.findIndex(l=>/Consignee/i.test(l)),iB=lines.findIndex(l=>/Buyer\s*\(\s*Bill/i.test(l));
+  if(iS<0||iB<0)return {ship:[],bill:[]};
+  let end=lines.findIndex((l,i)=>i>iB&&/Description of Goods|^Sl\b/i.test(l));if(end<0)end=lines.length;
+  return {ship:lines.slice(iS+1,iB),bill:lines.slice(iB+1,end)};
+}
+function pdfLines(its){
+  its.sort((a,b)=>b.y-a.y||a.x-b.x);
+  const rows=[];
+  for(const t of its){const r=rows[rows.length-1];if(r&&Math.abs(r.y-t.y)<=3)r.t.push(t);else rows.push({y:t.y,t:[t]});}
+  return rows.map(r=>{r.t.sort((a,b)=>a.x-b.x);let s='',px=null;for(const t of r.t){if(px!==null&&t.x-px>1.2)s+=' ';s+=t.s;px=t.x+t.w;}return s.replace(/\s+/g,' ').trim();}).filter(Boolean);
+}
+const nz=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+const LBL_L=[['invno','Invoice No.'],['dn','Delivery Note'],['ref','Reference No. & Date.'],['bono','Buyer’s Order No.'],['ddn','Dispatch Doc No.'],['dthr','Dispatched through'],['lr','Bill of Lading/LR-RR No.'],['tod','Terms of Delivery']];
+const LBL_R=[['date','Dated'],['mop','Mode/Terms of Payment'],['oref','Other References'],['bodt','Dated'],['dndt','Delivery Note Date'],['dest','Destination'],['veh','Motor Vehicle No.']];
+const MK=['invno','date','dn','mop','ref','oref','bono','bodt','ddn','dndt','dthr','dest','lr','veh','tod'];
+function parseLabels(lines,L){
+  const out={},seen={};let cur=null;
+  for(const l of lines){
+    const hit=L.find(([k,lb])=>!(k in seen)&&nz(l)===nz(lb));
+    if(hit){cur=hit[0];seen[cur]=1;out[cur]='';continue;}
+    if(cur)out[cur]=(out[cur]?out[cur]+' ':'')+l;
+  }
+  return out;
+}
+function pdfMeta(its,W){
+  const hd=its.filter(t=>/^Description/i.test(t.s.trim())).sort((a,b)=>b.y-a.y)[0];
+  const top=hd?hd.y:-1e9;
+  const R=its.filter(t=>t.x>=W*0.522&&t.y>top+2);
+  const lab=R.filter(t=>/^(Dated|Mode\/Terms|Other References|Delivery Note Date|Destination|Motor Vehicle)/i.test(t.s.trim()));
+  const sp=lab.length?Math.min(...lab.map(t=>t.x))-3:W*0.74;
+  return Object.assign(parseLabels(pdfLines(R.filter(t=>t.x<sp)),LBL_L),parseLabels(pdfLines(R.filter(t=>t.x>=sp)),LBL_R));
+}
+function docxMeta(doc,cellText){
+  const out={},all=LBL_L.concat(LBL_R);let dated=0;
+  doc.querySelectorAll('td').forEach(td=>{
+    const ls=cellText(td).split('\n').map(s=>s.replace(/\s+/g,' ').trim()).filter(Boolean);
+    if(!ls.length||ls.length>6)return;
+    const h=all.find(([k,lb])=>nz(ls[0])===nz(lb));if(!h)return;
+    let k=h[0];
+    if(nz(ls[0])==='dated'){k=dated===0?'date':dated===1?'bodt':'';dated++;}
+    if(k&&!(k in out))out[k]=ls.slice(1).join(' ');
+  });
+  return out;
+}
+
+function itemsFromLines(all){
+  const out=[];let inT=false,last=null;
+  for(const l of all){
+    if(/Description of Goods/i.test(l)){inT=true;last=null;continue;}
+    if(!inT)continue;
+    if(/^(continued to page|CGST|SGST|IGST|Total\b|Less\b|Round|Amount Chargeable|SUBJECT TO|This is a Computer)/i.test(l)||/^[\d,]+\.\d{2}$/.test(l)){inT=false;last=null;continue;}
+    if(/^(No\.?|Rate|No\.? Rate|GST Rate|Sl No\.?)$/i.test(l))continue;
+    const m=l.match(ROW);
+    if(m){last=mkItem(m[2],'',m[3],m[4],m[5],m[7],m[8],m[9],m[10]);out.push(last);}
+    else if(last)last.desc+=(last.desc?' ':'')+l;
+  }
+  return out;
+}
+async function readPdf(f){
+  const V='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/';
+  await loadJS(V+'pdf.min.js');
+  pdfjsLib.GlobalWorkerOptions.workerSrc=V+'pdf.worker.min.js';
+  const pdf=await pdfjsLib.getDocument({data:await f.arrayBuffer()}).promise;
+  let all=[],left=[],meta={};
+  for(let p=1;p<=pdf.numPages;p++){
+    const pg=await pdf.getPage(p),vp=pg.getViewport({scale:1}),tc=await pg.getTextContent();
+    const its=tc.items.filter(t=>t.str&&t.str.trim()).map(t=>({s:t.str,x:t.transform[4],y:t.transform[5],w:t.width||0}));
+    all=all.concat(pdfLines(its.slice()));
+    if(p===1){left=pdfLines(its.filter(t=>t.x<vp.width*0.522));meta=pdfMeta(its,vp.width);}
+  }
+  return Object.assign({items:itemsFromLines(all),meta},partyFrom(left));
+}
+async function readDocx(f){
+  await loadJS('https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js');
+  const res=await mammoth.convertToHtml({arrayBuffer:await f.arrayBuffer()});
+  const doc=new DOMParser().parseFromString(res.value,'text/html');
+  const cellText=td=>{const c=td.cloneNode(true);c.querySelectorAll('p,br').forEach(e=>e.after('\n'));return c.textContent.replace(/\u00a0/g,' ')};
+  const out=[];let prev=null;
+  doc.querySelectorAll('tr').forEach(tr=>{
+    const ne=[...tr.children].map(c=>cellText(c).replace(/\s+/g,' ').trim()).filter(Boolean);
+    if(ne.length>=7&&/^\d{1,3}$/.test(ne[0])&&/^\d{4,8}$/.test(ne[2])&&/%/.test(ne[3])){
+      if(/^[\d,.]+$/.test(ne[4])&&/^[A-Za-z.]+$/.test(ne[5]))ne.splice(5,1);
+      const qm=ne[4].match(/^([\d,]*\.?\d+)/)||[];
+      const rest=ne.slice(7);
+      prev=mkItem(ne[1],'',ne[2],ne[3],qm[1]||ne[4],ne[5],ne[6],rest.length>1?rest[0]:'',rest[rest.length-1]);
+      out.push(prev);return;
+    }
+    if(prev&&ne.length===1&&!/^(CGST|SGST|IGST|Round|Total|Less|Amount)/i.test(ne[0])&&!/^[\d,]+\.\d{2}$/.test(ne[0])){prev.desc+=(prev.desc?' ':'')+ne[0];}
+    else if(ne.length)prev=null;
+  });
+  const tdBy=re=>[...doc.querySelectorAll('td')].filter(td=>re.test(td.textContent)).sort((a,b)=>a.textContent.length-b.textContent.length)[0];
+  const toLines=td=>cellText(td).split('\n').map(s=>s.replace(/\s+/g,' ').trim()).filter(Boolean);
+  const reB=/Buyer\s*\(\s*Bill/i;
+  const tc=tdBy(/Consignee/i);let lines=tc?toLines(tc):[];
+  if(tc&&!reB.test(tc.textContent)){const tb=tdBy(reB);if(tb)lines=lines.concat(toLines(tb));}
+  return Object.assign({items:out,meta:docxMeta(doc,cellText)},partyFrom(lines));
+}
+async function importFile(inp){
+  const f=inp.files[0];inp.value='';if(!f)return;
+  say('Reading '+f.name+' …');
+  try{
+    const ext=f.name.split('.').pop().toLowerCase();
+    if(ext!=='pdf'&&ext!=='docx')throw new Error('Please choose a PDF or Word (.docx) bill.');
+    const r=ext==='pdf'?await readPdf(f):await readDocx(f);
+    let bad=0;r.items.forEach(it=>{const e=num(it.qty)*num(it.rate)*(1-num(it.disc)/100);if(it._a&&Math.abs(e-it._a)>0.6)bad++;delete it._a;});
+    if(!r.items.length)throw new Error('No items found. This works with text PDFs and Word bills in the same format as your samples (not scanned pictures).');
+    const m=r.meta||{},hasMeta=!!(m.invno||m.bono||m.veh||m.date);
+    ask('Found '+r.items.length+' items · Ship to: '+(r.ship[0]||'not found')+' · Bill to: '+(r.bill[0]||'not found')+(bad?' · '+bad+' row(s) have an amount different from the file, please check':'')+(hasMeta?' · Invoice '+(m.invno||'-')+' dated '+(m.date||'-')+' · PO '+(m.bono||'-')+' · Vehicle '+(m.veh||'-'):' · invoice details not found, they stay as they are')+'. Replace the current bill details, items and Ship to / Bill to? (Your firm details stay as they are.)',()=>{
+      items=r.items;curId=null;
+      if(hasMeta)MK.forEach(k=>{F[k]=(m[k]||'').trim();});
+      if(r.ship.length){F.shipn=r.ship[0];F.shipa=r.ship.slice(1).join('\n');}
+      if(r.bill.length){F.billn=r.bill[0];F.billa=r.bill.slice(1).join('\n');}
+      paginate();save();say('Loaded '+items.length+' items from '+f.name);
+    });
+  }catch(e){say(e&&e.message?e.message:'Could not read this file');}
+}
+
+/* ---------- Bill history, backup, saved items & parties ---------- */
+const HK='durga_hist_v1',CK='durga_cat_v1';
+const rdJ=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}};
+const wrJ=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+let H=rdJ(HK,[]),CAT=rdJ(CK,{items:[],parties:[]}),curId=null,pnTab='bills';
+const cl=o=>JSON.parse(JSON.stringify(o));
+const ik=c=>((c.name||'')+'|'+(c.desc||'')).toLowerCase().trim();
+const pk=c=>((c.name||'')+'|'+(c.addr||'')).toLowerCase().trim();
+function learn(){
+  items.forEach(it=>{if(!it.name.trim())return;const c={name:it.name,desc:it.desc,hsn:it.hsn,gst:it.gst,rate:it.rate,per:it.per};const i=CAT.items.findIndex(x=>ik(x)===ik(c));if(i<0)CAT.items.push(c);else CAT.items[i]=c;});
+  [[F.shipn,F.shipa],[F.billn,F.billa]].forEach(([n,a])=>{if(!(n||'').trim())return;const c={name:n,addr:a||''};if(!CAT.parties.some(x=>pk(x)===pk(c)))CAT.parties.push(c);});
+  wrJ(CK,CAT);
+}
+function saveBill(){
+  const id=curId||('b'+Date.now());
+  const e=Object.assign({id,name:(F.invno||'No invoice no.')+' · '+(F.billn||''),at:Date.now()},cl({f:F,items:items,ro:$('ro').checked,gt:$('gt').value}));
+  const i=H.findIndex(b=>b.id===id);if(i<0)H.unshift(e);else H[i]=e;
+  curId=id;wrJ(HK,H);learn();save();
+}
+function loadSnap(b,id){
+  items=cl(b.items);Object.assign(F,cl(b.f));$('ro').checked=b.ro!==false;$('gt').value=b.gt||'cs';
+  curId=id;paginate();save();
+}
+const bkText=()=>JSON.stringify({app:'durga-bill',v:1,hist:H,cat:CAT,sites:SITES});
+function restore(t){
+  try{
+    const o=JSON.parse(t);if(!o||o.app!=='durga-bill')throw 0;
+    (o.hist||[]).forEach(b=>{const i=H.findIndex(x=>x.id===b.id);if(i<0)H.push(b);else H[i]=b;});
+    H.sort((a,b)=>b.at-a.at);
+    const c=o.cat||{};
+    (c.items||[]).forEach(x=>{if(!CAT.items.some(y=>ik(y)===ik(x)))CAT.items.push(x)});
+    (c.parties||[]).forEach(x=>{if(!CAT.parties.some(y=>pk(y)===pk(x)))CAT.parties.push(x)});
+    (o.sites||[]).forEach(x=>{if(x&&x.po&&!SITES.some(y=>y.po===x.po))SITES.push(x)});wrJ(SK,SITES);wrJ(HK,H);wrJ(CK,CAT);rp();$('bkm').textContent='Restored '+(o.hist||[]).length+' bills.';
+  }catch(e){$('bkm').textContent='This is not a valid backup.';}
+}
+function restoreFile(inp){const f=inp.files[0];inp.value='';if(!f)return;const r=new FileReader();r.onload=()=>restore(r.result);r.readAsText(f);}
+function openPn(t){pnTab=t||pnTab;rp();$('pn').classList.add('on');}
+function rp(){
+  const d=x=>new Date(x).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'2-digit'});
+  let h='<div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap"><button data-a="tab" data-id="bills" class="'+(pnTab==='bills'?'pri':'')+'">Saved bills</button><button data-a="tab" data-id="cat" class="'+(pnTab==='cat'?'pri':'')+'">Items &amp; parties</button><span style="flex:1"></span><button data-a="close">Close</button></div>';
+  if(pnTab==='bills'){
+    h+='<p><button class="pri" data-a="save">Save current bill</button> <small>'+(curId?'(updates the saved copy)':'(adds a new saved bill)')+'</small></p>';
+    h+=H.length?H.map(b=>'<div class="r"><div><b>'+esc(b.name)+'</b><br><small>'+b.items.length+' items · saved '+d(b.at)+(b.id===curId?' · open now':'')+'</small></div><div><button data-a="open" data-id="'+b.id+'">Open</button><button data-a="copy" data-id="'+b.id+'">Copy as new</button><button data-a="del" data-id="'+b.id+'">Delete</button></div></div>').join(''):'<p><small>No saved bills yet. Press “Save current bill”.</small></p>';
+    h+='<hr><b>Backup</b><p><button data-a="back">Download backup file</button><button data-a="shw">Show backup text</button><label class="fl">Restore from file<input type="file" accept=".json" hidden onchange="restoreFile(this)"></label></p><textarea id="bk" rows="3" style="width:100%" placeholder="Backup text appears here. To restore, paste a backup text here and press Restore text."></textarea><p><button data-a="rst">Restore text</button> <small id="bkm"></small></p>';
+  }else{
+    h+='<p><button data-a="learn">Save this bill’s items &amp; parties</button> <small>Saved items and parties also appear as suggestions while you type a name on the bill.</small></p><b>Saved items</b>';
+    h+=CAT.items.length?CAT.items.map((c,i)=>'<div class="r"><div><b>'+esc(c.name)+'</b> <small>'+esc(c.desc)+' · HSN '+esc(c.hsn)+' · '+esc(c.gst)+'% · '+esc(c.rate)+'/'+esc(c.per)+'</small></div><div><button data-a="addi" data-id="'+i+'">Add to bill</button><button data-a="deli" data-id="'+i+'">Delete</button></div></div>').join(''):'<p><small>None yet.</small></p>';
+    h+='<hr><b>Saved parties</b>';
+    h+=CAT.parties.length?CAT.parties.map((c,i)=>'<div class="r"><div><b>'+esc(c.name)+'</b><br><small>'+esc((c.addr||'').split('\n')[0])+'</small></div><div><button data-a="psh" data-id="'+i+'">Use as Ship to</button><button data-a="pbl" data-id="'+i+'">Use as Bill to</button><button data-a="delp" data-id="'+i+'">Delete</button></div></div>').join(''):'<p><small>None yet.</small></p>';
+  }
+  $('pc').innerHTML=h;
+}
+$('pn').addEventListener('click',e=>{
+  if(e.target===$('pn')){$('pn').classList.remove('on');return;}
+  const b=e.target.closest('[data-a]');if(!b)return;
+  const a=b.dataset.a,id=b.dataset.id,x=H.find(y=>y.id===id),n=+id;
+  if(a==='close')$('pn').classList.remove('on');
+  else if(a==='tab'){pnTab=id;rp();}
+  else if(a==='save'){saveBill();rp();}
+  else if((a==='open'||a==='copy')&&x){loadSnap(x,a==='open'?id:null);$('pn').classList.remove('on');say(a==='open'?'Opened '+x.name:'Copied '+x.name+'. Change the invoice no., then use Bills > Save current bill.');}
+  else if(a==='del'){if(b.dataset.s){H=H.filter(y=>y.id!==id);if(curId===id)curId=null;wrJ(HK,H);rp();}else{b.dataset.s=1;b.textContent='Sure?';}}
+  else if(a==='back'){try{const l=document.createElement('a');l.href=URL.createObjectURL(new Blob([bkText()],{type:'application/json'}));l.download='bill-backup-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(l);l.click();l.remove();}catch(err){}$('bkm').textContent='If nothing downloaded, press Show backup text and copy it.';}
+  else if(a==='shw'){$('bk').value=bkText();$('bk').select();}
+  else if(a==='rst')restore($('bk').value);
+  else if(a==='learn'){learn();rp();}
+  else if(a==='addi'){const c=CAT.items[n];items.push({name:c.name,desc:c.desc,hsn:c.hsn,gst:c.gst,qty:'',rate:c.rate,per:c.per,disc:''});paginate();save();say('Added '+c.name+' to the bill.');}
+  else if(a==='deli'){CAT.items.splice(n,1);wrJ(CK,CAT);rp();}
+  else if(a==='psh'||a==='pbl'){const p=CAT.parties[n],k=a==='psh'?'shipn':'billn',ad=a==='psh'?'shipa':'billa';F[k]=p.name;F[ad]=p.addr||'';paginate();save();say((a==='psh'?'Ship to':'Bill to')+' set to '+p.name);}
+  else if(a==='delp'){CAT.parties.splice(n,1);wrJ(CK,CAT);rp();}
+});
+/* suggestions while typing an item name or a party name */
+const sg=$('sg');
+function sgHide(){sg.style.display='none'}
+function sgShow(t,list){
+  if(!list.length){sgHide();return;}
+  const r=t.getBoundingClientRect();sg.innerHTML='';
+  list.forEach(o=>{const d=document.createElement('div');d.className='o';d.innerHTML='<b>'+esc(o.a)+'</b> <small>'+esc(o.b)+'</small>';d.onmousedown=ev=>{ev.preventDefault();sgHide();o.pick();};sg.appendChild(d);});
+  sg.style.left=Math.max(4,r.left)+'px';sg.style.top=(r.bottom+2)+'px';sg.style.display='block';
+}
+document.addEventListener('input',e=>{
+  const t=e.target,v=(t.innerText||'').trim().toLowerCase(),row=t.closest&&t.closest('.row.it');
+  if(row&&t.dataset.f==='name'&&v){
+    const i=+row.dataset.i;
+    sgShow(t,CAT.items.filter(c=>(c.name+' '+c.desc).toLowerCase().includes(v)&&ik(c)!==ik(items[i])).slice(0,6).map(c=>({a:c.name,b:c.desc+' · '+c.rate,pick:()=>{Object.assign(items[i],{name:c.name,desc:c.desc,hsn:c.hsn,gst:c.gst,rate:c.rate,per:c.per});paginate();save();const q=document.querySelector('.row.it[data-i="'+i+'"] [data-f=qty]');if(q)q.focus();}})));
+  }else if(t.dataset&&(t.dataset.k==='shipn'||t.dataset.k==='billn')&&v){
+    const k=t.dataset.k,ad=k==='shipn'?'shipa':'billa';
+    sgShow(t,CAT.parties.filter(p=>p.name.toLowerCase().includes(v)&&!(p.name===F[k]&&(p.addr||'')===F[ad])).slice(0,6).map(p=>({a:p.name,b:(p.addr||'').split('\n')[0],pick:()=>{F[k]=p.name;F[ad]=p.addr||'';paginate();save();}})));
+  }else sgHide();
+});
+document.addEventListener('focusout',sgHide);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){sgHide();$('pn').classList.remove('on');}});
+
+/* ---------- PO sites + payment letter ---------- */
+const SK='durga_sites_v1';
+const SEED=[
+['6000043826','Survey no. 281, Tehsil – Shiv, Pusar, Barmer – 344701, RAJASTHAN'],
+['6000048215','LUCEO SOLAR PRIVATE LIMITED, No.164, Sheo, Goonga, Khata No 300, Survey (Khasara), Barmer - 344705, RAJASTHAN'],
+['6000048596','ENGIE LUCEO 375W 300MW, MANDALIYA VILLAGE, SHIV BARMER, 344701, RAJASTHAN'],
+['6000046861','Ampin Energy Green Seventeen Private Limited, Survey Number 517, Village Uppalapadu, Owk Mandal, Nandyal, Andhra Pradesh - 518122'],
+['6000049052','Eden Renewable Bercy Private Limited, Khata no. 54, Khasra No. 144, Fatehgarh, Halka – Bhakrani Modha Ganeshpura Jaisalmer, - 345027,'],
+['6000048599','369.6 MW / 548.5 Mwp Radiance, Renewable Site Village-Goonga, Sheo,Barmer Rajasthan ,'],
+['6000045555','MRS Buildvision (Solar Park 1000MW), Solar, Power Park, Karnisar Bhatiyan 33/400, KV, Pooling Sub-Station – 1000Mw, Block /, Tehsil, #Poogal, Bikaner - 334808'],
+['6000046685','Azure Power Fifty-Two Pvt Ltd, Khasra no. 669 Village Solankiyon Ki Dhani Teshil Kolayat Bikaner - 334302'],
+['6000048174','Radiant Star Solar Park PVT sheo manihari 610/469 barmer RAJASTHAN- 344705, RAJASTHAN'],
+['6000048230','EDEN RENEWABLE, Khata No.53 Fatehgarh Halka Bhakrani Modha, Khasra No.144 Ganeshpur Jaisalmer, - 345027,']];
+let SITES=rdJ(SK,null);
+if(!SITES){SITES=SEED.map(([po,site])=>({po,to:po==='6000046685'?'Jackson Green Ltd':'Jackson Green Pvt. Ltd',site}));wrJ(SK,SITES);}
+function upsertSite(x){const i=SITES.findIndex(s=>s.po===x.po);if(i<0)SITES.push(x);else SITES[i]=x;wrJ(SK,SITES);}
+function sitesView(){
+  const tab=(id,l)=>'<button data-a="tab" data-id="'+id+'" class="'+(pnTab===id?'pri':'')+'">'+l+'</button>';
+  let h='<div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">'+tab('bills','Saved bills')+tab('cat','Items &amp; parties')+tab('sites','PO sites')+'<span style="flex:1"></span><button data-a="close">Close</button></div>';
+  h+='<p><small>The payment letter finds the site address from the Buyer’s Order No. (PO no.) on the bill.</small></p>';
+  h+='<div class="r" style="display:block"><input id="sPo" placeholder="PO no. (digits)" style="width:160px"> <input id="sTo" placeholder="Addressee company" value="Jackson Green Pvt. Ltd" style="width:240px"><br><textarea id="sAd" rows="3" style="width:100%;margin-top:4px" placeholder="Site address, exactly as it should appear after the PO no."></textarea><button class="pri" data-a="s-save">Save site</button><label class="fl">Add from old letters (.docx)<input type="file" multiple accept=".docx" hidden onchange="importLetters(this)"></label> <small id="sMsg"></small></div>';
+  h+=SITES.length?SITES.map((s,i)=>'<div class="r"><div><b>'+esc(s.po)+'</b> <small>'+esc(s.to)+'</small><br><small>'+esc(s.site)+'</small></div><div><button data-a="s-edit" data-id="'+i+'">Edit</button><button data-a="s-del" data-id="'+i+'">Delete</button></div></div>').join(''):'<p><small>No sites yet.</small></p>';
+  $('pc').innerHTML=h;
+}
+const rp0=rp;
+rp=function(){
+  if(pnTab==='sites'){sitesView();return;}
+  rp0();
+  const bar=$('pc').firstElementChild,b=document.createElement('button');
+  b.dataset.a='tab';b.dataset.id='sites';b.textContent='PO sites';bar.insertBefore(b,bar.querySelector('span'));
+};
+$('pn').addEventListener('click',e=>{
+  const b=e.target.closest('[data-a]');if(!b||!b.dataset.a.startsWith('s-'))return;
+  const a=b.dataset.a,n=+b.dataset.id;
+  if(a==='s-save'){
+    const po=($('sPo').value.match(/\d{6,}/)||[''])[0],site=$('sAd').value.replace(/\s+/g,' ').trim();
+    if(!po||!site){$('sMsg').textContent='Enter the PO number and the address.';return;}
+    upsertSite({po,to:$('sTo').value.trim()||'Jackson Green Pvt. Ltd',site});sitesView();$('sMsg').textContent='Saved '+po;
+  }else if(a==='s-edit'){const s=SITES[n];$('sPo').value=s.po;$('sTo').value=s.to;$('sAd').value=s.site;$('sPo').scrollIntoView({block:'center'});}
+  else if(a==='s-del'){if(b.dataset.s){SITES.splice(n,1);wrJ(SK,SITES);sitesView();}else{b.dataset.s=1;b.textContent='Sure?';}}
+});
+async function importLetters(inp){
+  const fs=[...inp.files];inp.value='';if(!fs.length)return;
+  $('sMsg').textContent='Reading…';
+  try{
+    await loadJS('https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js');
+    let n=0;
+    for(const f of fs){
+      const r=await mammoth.extractRawText({arrayBuffer:await f.arrayBuffer()});
+      const t=r.value.replace(/\s+/g,' ');
+      const m=t.match(/P\s*O\s*no\s*ZNB\s*-?\s*(\d{6,})\s*,?\s*(.*?)\s*Site\s*\.?\s*Sir I had/i);
+      if(!m)continue;
+      const to=((t.match(/Accounts Department\s*(.*?)\s*A-43/i)||[])[1]||'Jackson Green Pvt. Ltd').trim();
+      upsertSite({po:m[1],to,site:m[2].trim()});n++;
+    }
+    sitesView();$('sMsg').textContent='Added/updated '+n+' site(s) from '+fs.length+' file(s).';
+  }catch(e){$('sMsg').textContent=e&&e.message?e.message:'Could not read the files.';}
+}
+const poNum=()=>((F.bono||'').match(/\d{6,}/)||[''])[0];
+function letterDate(){
+  const m=(F.date||'').match(/^(\d{1,2})-([A-Za-z]{3})-(\d{2})$/);if(!m)return F.date||'';
+  const mo=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'].indexOf(m[2].toLowerCase())+1;
+  return String(m[1]).padStart(2,'0')+'/'+String(mo).padStart(2,'0')+'/'+m[3];
+}
+let lmode='bill';
+function siteFromBill(){
+  const ls=addrLines(F.shipa);if(!ls.length)return '';
+  let t=ls.join(' ').replace(/[\s,]+$/,'').trim();
+  const sm=(F.shipa||'').match(/State Name\s*:\s*([A-Za-z ]+?)\s*,/i),st=sm?sm[1].trim().toUpperCase():'';
+  if(st&&!new RegExp('\\b'+st+'\\b','i').test(t))t+=', '+st;
+  return t;
+}
+function renderLetter(){
+  const po=poNum(),s=SITES.find(x=>x.po===po),bs=siteFromBill(),useS=!!s&&(lmode==='saved'||!bs),site=useS?s.site:bs,tot=totals().tot,amt=Number.isInteger(tot)?String(tot):tot.toFixed(2);
+  const d=letterDate(),veh=(F.veh||F.dthr||'').trim();
+  $('lp').innerHTML='<p class="ld" contenteditable><b>'+esc(d)+'</b></p><p><b>To</b></p>'
+   +'<p class="li" contenteditable><b>Chief Accountant</b></p>'
+   +'<p class="li" contenteditable><b>Accounts Department '+esc(s?s.to:'Jackson Green Pvt. Ltd')+'</b></p>'
+   +'<p class="li" contenteditable><b>A-43, Yakubpur Rd, Hosiery Complex, Block A,</b></p>'
+   +'<p class="li" contenteditable><b>Phase-2, Noida, Uttar Pradesh 201305</b></p>'
+   +'<p contenteditable>Dear Sir,</p>'
+   +'<p class="fi" contenteditable>I had supplied material against P O no <b>ZNB-'+esc(po)+', <span id="lsite" class="'+(site?'':'ph')+'">'+(site?esc(site):'[site address not found: type it here]')+'</span></b> Site. Sir I had supplied the material against the above purchase order with the following Invoices.</p>'
+   +'<p contenteditable>Sir, I had hired this supply from a local transporter whose vehicle details are shown in the above and below sheets of the invoice, hence you are requested to pay the following Invoices without any transport LR details</p>'
+   +'<table contenteditable><tr><td>Invoice Date</td><td>Invoice no</td><td>PO No.</td><td>Vehicle Number</td><td>Invoice Amount</td></tr><tr><td>'+esc(d)+'</td><td>'+esc(F.invno||'')+'</td><td>'+esc(po)+'</td><td>'+esc(veh)+'</td><td>'+esc(amt)+'</td></tr></table>';
+  $('lnote').innerHTML='<span>Made from the bill (PO '+esc(po||'not entered')+'; address from '+(useS?'the saved PO site':'the bill')+').</span> <button onclick="lmode=\'bill\';renderLetter()">Refresh from bill</button>'+(s&&bs&&s.site!==bs?' <button onclick="lmode=\''+(useS?'bill':'saved')+'\';renderLetter()">'+(useS?'Use address from bill':'Use saved PO address')+'</button>':'')+' <button onclick="saveLetterSite()">Save this address for this PO</button> <button class="pri" onclick="window.print()">Print letter</button>';
+}
+function saveLetterSite(){
+  const po=poNum(),el=$('lsite');if(!po||!el)return;
+  const old=SITES.find(x=>x.po===po);
+  upsertSite({po,to:old?old.to:'Jackson Green Pvt. Ltd',site:el.innerText.replace(/\s+/g,' ').trim()});
+  el.classList.remove('ph');say('Address saved for PO '+po);
+}
+function toggleLetter(){
+  const on=!document.body.classList.contains('lt');
+  if(on){lmode='bill';renderLetter();}
+  document.body.classList.toggle('lt',on);
+  $('lbtn').textContent=on?'← Back to bill':'Payment letter';
+  if(!on)paginate();
+  window.scrollTo(0,0);
+}
+/* ---------- E-way bill JSON (bulk upload: ewaybillgst.gov.in > E-Waybill > Generate Bulk) ---------- */
+const EK='durga_ewb_v1',EWVER='1.1.1026';
+let EW=rdJ(EK,{last:{from:'bik',f:{},trid:'',trname:'',ver:''},po:{}});
+const CO={gstin:'08AAJFD4318H1ZH',name:'Durga Engineering Services',
+  bik:{a1:'Ho 3A SAMTA BIKANER',place:'Bikaner',pin:'344031'},
+  bal:{a1:'Near Bhagat Singh Circle',place:'Balotra',pin:'344032'},
+  bar:{a1:'',place:'Barmer',pin:'344001'},
+  oth:{a1:'',place:'',pin:''}};
+const UNIT={nos:'NOS',no:'NOS',pcs:'PCS',pc:'PCS',ltr:'LTR',lt:'LTR',mtr:'MTR',m:'MTR',roll:'ROL',rol:'ROL',kgs:'KGS',kg:'KGS',box:'BOX',set:'SET',sets:'SET',pair:'PRS',prs:'PRS',bag:'BAG',bdl:'BDL',bundle:'BDL',can:'CAN',ctn:'CTN',carton:'CTN',doz:'DOZ',dozen:'DOZ',gms:'GMS',gm:'GMS',pac:'PAC',pack:'PAC',ton:'TON',tonne:'TON',sqm:'SQM',sqf:'SQF',btl:'BTL',bottle:'BTL',cbm:'CBM',unt:'UNT',unit:'UNT'};
+const unitCode=u=>UNIT[(u||'').toLowerCase().replace(/[^a-z]/g,'')]||'OTH';
+const gstinOf=t=>((t||'').match(/GSTIN[^:]*:\s*([0-9A-Z]{15})/i)||[])[1]||'';
+const GSTRE=/^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/;
+const VEHRE=/^([A-Z]{2}\d{1,2}[A-Z]{0,3}\d{4}|TM[A-Z0-9]{6})$/;
+const clean=s=>(s||'').replace(/[–—]/g,'-').replace(/["'\\]/g,'').replace(/\s+/g,' ').trim();
+const r2=n=>Math.round(n*100)/100;
+const addrLines=a=>(a||'').split('\n').map(clean).filter(l=>l&&!/GSTIN|State Name/i.test(l));
+const splitA=s=>{s=clean(s);return [s.slice(0,120),s.slice(120,240)];};
+const norm=s=>(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+const STATES=/\b(andhra pradesh|gujarat|haryana|madhya pradesh|maharashtra|punjab|rajasthan|uttar pradesh|delhi|karnataka|tamil nadu|telangana|india)\b/gi;
+function guessPlace(t){const m=t.match(/\b\d{6}\b/g);if(!m)return '';const pin=m[m.length-1],pre=t.slice(0,t.lastIndexOf(pin));const seg=pre.split(/[,\-]/).map(s=>s.replace(STATES,'').replace(/\s+/g,' ').trim()).filter(Boolean);return seg.length?seg[seg.length-1].replace(/\(.*?\)/g,'').trim():'';}
+const MON=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+function ewDate(){const m=(F.date||'').match(/^(\d{1,2})-([A-Za-z]{3})-(\d{2})$/);if(!m)return '';return String(m[1]).padStart(2,'0')+'/'+String(MON.indexOf(m[2].toLowerCase())+1).padStart(2,'0')+'/20'+m[3];}
+const ewKey=()=>poNum()||gstinOf(F.billa);
+const ewSig=()=>norm(F.shipn+F.shipa+F.billn+F.billa);
+function ewDefaults(){
+  const m0=EW.po[ewKey()]||{},m=m0.sig===ewSig()?m0:{},L=EW.last,from=L.from||'bik',p=CO[from]||CO.bik,lf=(L.f&&L.f.from===from)?L.f:{};
+  const sl=addrLines(F.shipa),pins=sl.join(' ').match(/\b\d{6}\b/g)||[],ad=splitA(sl.join(', '));
+  const v=(F.veh||'').toUpperCase().replace(/[^A-Z0-9]/g,''),sm=(F.shipa||'').match(/Code\s*:\s*(\d{2})/i),sg=gstinOf(F.shipa),bg=gstinOf(F.billa);
+  return {from,fname:lf.fname||CO.name,fgst:lf.fgst||CO.gstin,fa1:lf.fa1||p.a1,fa2:lf.fa2||'',fplace:lf.fplace||p.place,fpin:lf.fpin||p.pin,fsc:lf.fsc||(lf.fgst||CO.gstin).slice(0,2),dname:L.dname||'',dgst:L.dgst||'',
+    bname:m.bname||clean(F.billn),bgst:m.bgst||bg,ta1:m.ta1!==undefined?m.ta1:ad[0],ta2:m.ta2!==undefined?m.ta2:ad[1],tplace:m.place||guessPlace(sl.join(', ')),tpin:m.pin||pins[pins.length-1]||'',tsc:m.tsc||(sm?sm[1]:(sg||bg).slice(0,2)),
+    sname:m.sname||clean(F.shipn),sgst:m.sgst||sg,dist:m.dist||'0',veh:VEHRE.test(v)?v:'',trid:L.trid||'',trname:L.trname||'',tt:'auto',ver:L.ver||EWVER};
+}
+function buildEwb(f){
+  const W=[],E=[],ig=$('gt').value==='ig';
+  const same=norm(F.shipn+' '+addrLines(F.shipa).join(' '))===norm(F.billn+' '+addrLines(F.billa).join(' '))&&norm(gstinOf(F.shipa))===norm(gstinOf(F.billa));
+  const tt=f.tt==='auto'?(same?1:2):+f.tt;
+  let taxable=0,half=0,igs=0;
+  const list=items.filter(x=>x.name.trim()||num(x.qty)).map((x,i)=>{
+    const a=amt(x),g=num(x.gst);taxable+=a;half+=a*g/200;igs+=a*g/100;
+    if(!/^\d{4,8}$/.test(String(x.hsn).trim()))W.push('Item '+(i+1)+' ('+x.name+'): HSN should be 4 to 8 digits.');
+    if(!(num(x.qty)>0))W.push('Item '+(i+1)+' ('+x.name+'): quantity is empty.');
+    if(unitCode(x.per)==='OTH')W.push('Item '+(i+1)+': unit "'+x.per+'" is not in the portal list, sent as OTH.');
+    return {productName:clean(x.name).slice(0,100),productDesc:clean(x.desc).slice(0,100),hsnCode:+String(x.hsn).trim()||0,quantity:num(x.qty),qtyUnit:unitCode(x.per),cgstRate:ig?0:g/2,sgstRate:ig?0:g/2,igstRate:ig?g:0,cessRate:0,cessNonAdvol:0,taxableAmount:r2(a)};
+  });
+  taxable=r2(taxable);const cg=r2(half),igv=r2(igs),tax=ig?igv:cg*2;
+  const raw=taxable+tax,tot=$('ro').checked?Math.round(raw):r2(raw),oth=r2(tot-raw);
+  const fs=+f.fgst.slice(0,2)||0,ts=+f.bgst.slice(0,2)||0;
+  const b={userGstin:clean(f.fgst),supplyType:'O',subSupplyType:1,subSupplyDesc:'',docType:'INV',docNo:clean(F.invno),docDate:ewDate(),transType:tt,
+    fromGstin:clean(f.fgst),fromTrdName:clean(f.fname).slice(0,100),fromAddr1:clean(f.fa1).slice(0,120),fromAddr2:clean(f.fa2).slice(0,120),fromPlace:clean(f.fplace),fromPincode:+f.fpin||0,fromStateCode:fs,actualFromStateCode:+f.fsc||fs,
+    toGstin:clean(f.bgst),toTrdName:clean(f.bname).slice(0,100),toAddr1:clean(f.ta1).slice(0,120),toAddr2:clean(f.ta2).slice(0,120),toPlace:clean(f.tplace),toPincode:+f.tpin||0,toStateCode:ts,actualToStateCode:+f.tsc||ts,
+    totalValue:taxable,cgstValue:ig?0:cg,sgstValue:ig?0:cg,igstValue:ig?igv:0,cessValue:0,TotNonAdvolVal:0,OthValue:oth,totInvValue:tot,
+    transMode:1,transDistance:+f.dist||0,transporterId:clean(f.trid),transporterName:clean(f.trname),transDocNo:'',transDocDate:'',vehicleNo:clean(f.veh).toUpperCase().replace(/[^A-Z0-9]/g,''),vehicleType:'R',itemList:list};
+  if((tt===2||tt===4)&&clean(f.sgst)){b.shipToGSTIN=clean(f.sgst);b.shipToTradeName=clean(f.sname).slice(0,100);}
+  if(tt===3||tt===4){b.dispatchFromGSTIN=clean(f.dgst);b.dispatchFromTradeName=clean(f.dname).slice(0,100);}
+  if(!/^[A-Za-z0-9\/-]{1,16}$/.test(b.docNo))W.push('Invoice no. must be up to 16 characters (letters, digits, / and -).');
+  if(!b.docDate)W.push('Invoice date is missing or not like 22-Nov-26.');
+  if(!GSTRE.test(b.fromGstin))E.push('Your GSTIN is not valid.');
+  if(!GSTRE.test(b.toGstin))E.push('Buyer GSTIN is not valid.');
+  if((tt===3||tt===4)&&!GSTRE.test(b.dispatchFromGSTIN))E.push('Dispatch from party GSTIN is needed for this transaction type.');
+  if(b.shipToGSTIN&&!GSTRE.test(b.shipToGSTIN))W.push('Ship to GSTIN is not valid.');
+  if(!b.fromAddr1)E.push('Dispatch address line 1 is empty. Type it once, it is remembered.');
+  if(!b.fromPlace)E.push('Dispatch place is empty.');
+  if(!/^\d{6}$/.test(String(f.fpin).trim()))E.push('Dispatch pincode must be 6 digits.');
+  if(!b.toAddr1)E.push('Delivery address line 1 is empty.');
+  if(!b.toPlace)E.push('Delivery place / city is empty.');
+  if(!/^\d{6}$/.test(String(f.tpin).trim()))E.push('Delivery pincode must be 6 digits.');
+  if(!b.vehicleNo&&!b.transporterId)W.push('No vehicle number or transporter GSTIN. The portal will make Part A only.');
+  else if(b.vehicleNo&&!VEHRE.test(b.vehicleNo))W.push('Vehicle number "'+b.vehicleNo+'" does not look right (normal like RJ04GB4748, temporary like TMxxxxxx).');
+  if(!list.length)E.push('There are no items.');
+  if(fs&&ts&&((ts!==fs)!==ig))W.push(ig?'IGST is chosen but buyer and you are in the same state (use CGST + SGST).':'Buyer is in another state: choose IGST at the top of the bill.');
+  if(tot<50000)W.push('Bill value is below ₹50,000, an e-way bill is normally not required.');
+  return {obj:{version:clean(f.ver)||EWVER,billLists:[b]},W,E,b};
+}
+
+const escA=s=>esc(s).replace(/"/g,'&quot;');
+const EWF={from:'e_from',fname:'e_fname',fgst:'e_fgst',fa1:'e_fa1',fa2:'e_fa2',fplace:'e_fplace',fpin:'e_fpin',bname:'e_bname',bgst:'e_bgst',ta1:'e_ta1',ta2:'e_ta2',tplace:'e_tplace',tpin:'e_tpin',tsc:'e_tsc',sname:'e_sname',sgst:'e_sgst',dist:'e_dist',veh:'e_veh',trid:'e_trid',trname:'e_trname',tt:'e_tt',ver:'e_ver',fsc:'e_fsc',dname:'e_dname',dgst:'e_dgst'};
+const ewRead=()=>{const f={};for(const k in EWF)f[k]=$(EWF[k]).value.trim();return f;};
+function ewbView(){
+  const d=ewDefaults();
+  const inp=(k,l,w)=>'<label style="display:inline-block;margin:3px 8px 3px 0;font-size:12px">'+l+'<br><input id="'+EWF[k]+'" value="'+escA(d[k])+'" style="width:'+w+'px"></label>';
+  let h='<div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap"><button data-a="tab" data-id="bills">Saved bills</button><button data-a="tab" data-id="cat">Items &amp; parties</button><button data-a="tab" data-id="sites">PO sites</button><button class="pri" data-a="tab" data-id="ewb">E-way bill</button><span style="flex:1"></span><button data-a="close">Close</button></div>';
+  h+='<p><small>Everything below is filled from this bill (invoice, party, delivery address, vehicle, items). Change anything you want, then download. Your own details are remembered; party details are remembered only while the bill’s address is unchanged.</small></p>';
+  h+='<b>Our details (dispatch from)</b><br><select id="e_from" onchange="ewFrom()" style="margin-right:8px"><option value="bik"'+(d.from==='bik'?' selected':'')+'>Bikaner (HO)</option><option value="bal"'+(d.from==='bal'?' selected':'')+'>Balotra (branch)</option><option value="bar"'+(d.from==='bar'?' selected':'')+'>Barmer (office)</option><option value="oth"'+(d.from==='oth'?' selected':'')+'>Other (type below)</option></select>'+inp('fname','Trade name',200)+inp('fgst','GSTIN',150)+'<br>'+inp('fa1','Address line 1',240)+inp('fa2','Address line 2',200)+inp('fplace','Place',110)+inp('fpin','Pincode',80)+inp('fsc','State code (dispatch place)',130);
+  h+='<br><b>Party (bill to)</b><br>'+inp('bname','Trade name',240)+inp('bgst','GSTIN',150);
+  h+='<br><b>Delivery address (ship to)</b><br>'+inp('ta1','Address line 1',300)+inp('ta2','Address line 2',220)+inp('tplace','Place / city',120)+inp('tpin','Pincode',80)+inp('tsc','State code',60);
+  h+='<br><b>Ship to party</b> <small>(used when ship to is different from bill to)</small><br>'+inp('sname','Trade name',240)+inp('sgst','GSTIN',150);
+  h+='<br><b>Dispatch from party</b> <small>(only for Bill From – Dispatch From and Combination)</small><br>'+inp('dname','Trade name',240)+inp('dgst','GSTIN',150);
+  h+='<br><b>Transport</b><br>'+inp('dist','Distance km (0 = portal works it out; if typed, within 10% of actual)',150)+inp('veh','Vehicle no.',120)+inp('trid','Transporter GSTIN (optional)',160)+inp('trname','Transporter name (optional)',160)+'<label style="display:inline-block;margin:3px 8px 3px 0;font-size:12px">Transaction type<br><select id="e_tt"><option value="auto">Automatic</option><option value="1">Regular</option><option value="2">Bill To – Ship To</option><option value="3">Bill From – Dispatch From</option><option value="4">Combination (all four differ)</option></select></label>'+inp('ver','JSON version',80);
+  h+='<p><button class="pri" data-a="ew-dl">Download JSON</button><button data-a="ew-show">Show JSON text</button><button data-a="ew-chk">Check</button> <small id="eMsg"></small></p><div id="eWarn"></div><textarea id="eOut" rows="8" style="width:100%;font-size:11px" placeholder="JSON text appears here"></textarea>';
+  $('pc').innerHTML=h;ewCheck();
+}
+function ewFrom(){const p=CO[$('e_from').value]||CO.bik;$('e_fa1').value=p.a1;$('e_fa2').value='';$('e_fplace').value=p.place;$('e_fpin').value=p.pin;}
+function ewCheck(save){
+  const f=ewRead(),r=buildEwb(f);
+  const bx=(c,t,l)=>'<div style="background:'+c+';color:#222;padding:6px 10px;border-radius:6px;margin:6px 0"><b>'+t+'</b><ul style="margin:4px 0 0 18px;padding:0">'+l.map(w=>'<li>'+esc(w)+'</li>').join('')+'</ul></div>';
+  $('eWarn').innerHTML=(r.E.length?bx('#f8d7da','Fix these first (download is blocked):',r.E):'')+(r.W.length?bx('#fff3cd','Please check:',r.W):'')+(r.E.length||r.W.length?'':'<div style="background:#d4edda;color:#222;padding:6px 10px;border-radius:6px;margin:6px 0">No problems found. '+r.b.itemList.length+' item(s), taxable '+fmt(r.b.totalValue)+', total '+fmt(r.b.totInvValue)+'.</div>')+'<div style="margin:4px 0;font-size:12px">Transaction type in the file: <b>'+['','Regular','Bill To – Ship To','Bill From – Dispatch From','Combination'][r.b.transType]+'</b></div>';
+  if(save){
+    EW.last={from:f.from,f:{from:f.from,fname:f.fname,fgst:f.fgst,fa1:f.fa1,fa2:f.fa2,fplace:f.fplace,fpin:f.fpin,fsc:f.fsc},dname:f.dname,dgst:f.dgst,trid:f.trid,trname:f.trname,ver:f.ver===EWVER?'':f.ver};
+    const k=ewKey();if(k)EW.po[k]={sig:ewSig(),bname:f.bname,bgst:f.bgst,ta1:f.ta1,ta2:f.ta2,place:f.tplace,pin:f.tpin,tsc:f.tsc,sname:f.sname,sgst:f.sgst,dist:f.dist};
+    wrJ(EK,EW);
+  }
+  return r;
+}
+$('pn').addEventListener('click',e=>{
+  const b=e.target.closest('[data-a]');if(!b||!b.dataset.a.startsWith('ew-'))return;
+  const a=b.dataset.a,r=ewCheck(a!=='ew-chk'),txt=JSON.stringify(r.obj,null,2),kb=(new Blob([txt]).size/1024).toFixed(1);
+  if((a==='ew-dl'||a==='ew-show')&&r.E.length){$('eMsg').textContent='Fix the red items first.';return;}
+  if(a==='ew-show'){$('eOut').value=txt;$('eOut').select();$('eMsg').textContent='File size '+kb+' KB (portal limit 5 MB). Copy this into a .json file if the download is blocked.';}
+  else if(a==='ew-dl'){
+    try{const l=document.createElement('a');l.href=URL.createObjectURL(new Blob([txt],{type:'application/json'}));l.download='EWB_'+(r.b.docNo||'bill').replace(/[^\w-]/g,'_')+'.json';document.body.appendChild(l);l.click();l.remove();}catch(err){}
+    $('eMsg').textContent='File size '+kb+' KB (portal limit 5 MB). If nothing downloaded, use Show JSON text.';
+  }
+});
+const rp1=rp;
+rp=function(){
+  if(pnTab==='ewb'){ewbView();return;}
+  rp1();
+  const bar=$('pc').firstElementChild,b=document.createElement('button');
+  b.dataset.a='tab';b.dataset.id='ewb';b.textContent='E-way bill';bar.insertBefore(b,bar.querySelector('span'));
+};
+
+window.addEventListener('beforeprint',()=>{if(!document.body.classList.contains('lt'))paginate();});
+
+load();paginate();
+</script>
+</body>
+</html>
