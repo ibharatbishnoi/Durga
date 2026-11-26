@@ -94,33 +94,40 @@ body.lt .lwrap{display:block}
 .lpaper td:nth-child(1){width:17.4%}.lpaper td:nth-child(2){width:23%}.lpaper td:nth-child(3){width:20.5%}.lpaper td:nth-child(4){width:19.4%}
 .lpaper .ph{background:#fff6c9}
 [contenteditable]:focus{outline:none}
+/* smart additions */
+.bad{outline:1.5px dashed #c0392b;outline-offset:-1px;background:#fdecea}
+#cbtn.warn{background:#b7791f;border-color:#b7791f}
+#toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#1f2933;color:#fff;padding:9px 14px;border-radius:8px;font-size:14px;z-index:130;display:none;gap:10px;align-items:center;box-shadow:0 4px 14px rgba(0,0,0,.3);max-width:92vw}
+#toast.on{display:flex}
+#toast button{font:inherit;font-size:13px;padding:4px 10px;border-radius:6px;border:0;background:#2f6f5e;color:#fff;cursor:pointer}
 @media (max-width:820px){.paper,.lpaper{zoom:.5}.lnote{width:auto}}
 @media print{
  @page{size:A4;margin:0}
  html,body{background:#fff}
  :root{padding:0}
  body::before{display:none}
- .bar,.hint,.x,#pn,#sg,.lnote{display:none!important}.lwrap{padding:0}.lpaper{margin:0;height:297mm;min-height:0;overflow:hidden;zoom:1!important}.lpaper .ph{background:none}
+ .bar,.hint,.x,#pn,#sg,.lnote,#toast{display:none!important}.lwrap{padding:0}.lpaper{margin:0;height:297mm;min-height:0;overflow:hidden;zoom:1!important}.lpaper .ph{background:none}
  .wrap{padding:0;overflow:visible}
  .paper{zoom:1!important;margin:0;width:210mm;height:297mm;padding:7mm 8mm;break-after:page;page-break-after:always}.paper:last-child{break-after:auto;page-break-after:auto}
  [contenteditable]:hover,[contenteditable]:focus{background:none}
+ .bad{outline:none!important;background:none!important}
 }
 </style>
 </head>
 <body>
 <div class="bar">
-  <button class="pri" onclick="window.print()">Print / Save PDF</button>
-  <button class="pri" id="pdfBtn" onclick="downloadPDF()">⬇ Download PDF</button>
+  <button class="pri" onclick="printBill()">Print / Save PDF</button>
   <button onclick="addItem()">+ Add item</button>
   <button class="pri" onclick="$('up').click()">⬆ Upload bill (PDF / Word)</button><input id="up" type="file" accept=".pdf,.docx" hidden onchange="importFile(this)">
   <span id="imp" style="font-size:13px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"></span>
   <button id="lbtn" onclick="toggleLetter()">Payment letter</button><button onclick="openPn('ewb')">E-way bill JSON</button><button onclick="openPn('bills')">Bills</button><button onclick="openPn('cat')">Items &amp; parties</button>
   <label>Date <input type="date" id="dp" onchange="setDate(this.value)"></label>
   <label><input type="checkbox" id="ro" checked onchange="calc();save()"> Round off</label>
-  <label>GST <select id="gt" onchange="calc();save()" style="font:inherit;font-size:14px;padding:6px;border-radius:6px;background:#323f4b;color:#fff;border:1px solid #52606d"><option value="cs">CGST + SGST</option><option value="ig">IGST</option></select></label>
+  <label>GST <select id="gt" onchange="calc();save()" style="font:inherit;font-size:14px;padding:6px;border-radius:6px;background:#323f4b;color:#fff;border:1px solid #52606d"><option value="auto">Auto</option><option value="cs">CGST + SGST</option><option value="ig">IGST</option></select><span id="gtn" style="font-size:12px;opacity:.75"></span></label>
   <button onclick="newBill()">New bill</button>
+  <button id="cbtn" onclick="openPn('chk')">✓ Check</button><button onclick="shareBill()">Share</button>
 </div>
-<div class="hint">Use “Upload bill” to take the items and Ship to / Bill to from a PDF or Word bill. Tap any text on the bill to edit it. Amounts, GST, round off and amount in words update by themselves. If the items don’t fit on one A4 page, the bill continues on the next page automatically (with the same header), and the totals come on the last page. Use the red × at the left of each row’s Amount to remove it.</div>
+<div class="hint">Tap any text on the bill to edit it. Amounts, GST, round off and amount in words update by themselves. GST “Auto” picks IGST or CGST + SGST from the buyer’s GSTIN. Fields with a red dashed box need attention; “Check” lists every problem. New bill gives the next invoice number by itself, and printing saves the bill in “Bills”. Use the red × to remove a row (you can undo).</div>
 
 <div class="wrap"><div class="paper" id="paper">
 <div class="title">Tax Invoice</div>
@@ -191,13 +198,10 @@ State Name      : Rajasthan, Code : 08</span></div>
 </div></div>
 
 <div class="lwrap" id="lt"><div class="lnote" id="lnote"></div><div class="lpaper" id="lp"></div></div>
-<div id="pn"><div id="pc"></div></div><div id="sg"></div>
+<div id="pn"><div id="pc"></div></div><div id="sg"></div><div id="toast"></div>
 <script>
 const KEY='durga_bill_v1';
 const BILL_ID='b3'; // changes each time a new bill is prepared from an uploaded document
-const DEF=[{name:'GI Bolt Nut',desc:'8x20mm +2 Plain Washer + 1Spring washer',hsn:'73181500',gst:'18',qty:'6000',rate:'5.64',per:'Nos',disc:''},
-{name:'SS Bolt Nut',desc:'8*20mm +2 Plain Washer +1 Spring Washer',hsn:'73181500',gst:'18',qty:'2000',rate:'9.40',per:'Nos',disc:''},
-{name:'GI Bolt Nut',desc:'10x40mm +2 Plain Washer + 1Spring washer',hsn:'73181500',gst:'18',qty:'7000',rate:'8.46',per:'Nos',disc:''}];
 const $=id=>document.getElementById(id), q=s=>document.querySelector(s);
 const num=s=>{const n=parseFloat(String(s||'').replace(/[^0-9.\-]/g,''));return isNaN(n)?0:n};
 const fmt=n=>n.toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -211,16 +215,17 @@ Object.assign(F,{invno:'2026-27/00156',date:'22-Nov-26',dn:'',mop:'',ref:'',oref
 let items=[{name:'Foundation Bolt',desc:'Grade 4.6 (650mm x M20)',hsn:'73181500',gst:'18',qty:'160',rate:'320.00',per:'Nos',disc:''}];
 const applyF=r=>r.querySelectorAll('[data-k]').forEach(e=>e.textContent=F[e.dataset.k]??'');
 const amt=it=>Math.round(num(it.qty)*num(it.rate)*(1-num(it.disc)/100)*100)/100;
+const fixIt=x=>{const o={name:'',desc:'',hsn:'',gst:'18',qty:'',rate:'',per:'Nos',disc:''};Object.keys(x||{}).forEach(k=>{if(k!=='_a')o[k]=x[k]==null?'':String(x[k])});return o;};
 
 function rowHTML(i){const it=items[i];return `<div class="row it" data-i="${i}">
  <div class="c1">${i+1}</div>
  <div><b class="nm" contenteditable data-f="name">${esc(it.name)}</b><span class="ds" contenteditable data-f="desc">${esc(it.desc)}</span></div>
- <div class="h" contenteditable data-f="hsn">${esc(it.hsn)}</div>
- <div class="g"><span contenteditable data-f="gst" style="display:inline-block">${esc(it.gst)}</span> %</div>
- <div class="q"><span contenteditable data-f="qty" data-n="1" style="display:inline-block">${esc(it.qty?fq(num(it.qty)):'')}</span> <span class="u">${esc(it.per)}</span></div>
- <div class="r" contenteditable data-f="rate">${esc(it.rate)}</div>
+ <div class="h" contenteditable inputmode="numeric" data-f="hsn">${esc(it.hsn)}</div>
+ <div class="g"><span contenteditable inputmode="decimal" data-f="gst" style="display:inline-block">${esc(it.gst)}</span> %</div>
+ <div class="q"><span contenteditable inputmode="decimal" data-f="qty" data-n="1" style="display:inline-block">${esc(it.qty?fq(num(it.qty)):'')}</span> <span class="u">${esc(it.per)}</span></div>
+ <div class="r" contenteditable inputmode="decimal" data-f="rate">${esc(it.rate)}</div>
  <div contenteditable data-f="per">${esc(it.per)}</div>
- <div class="r" contenteditable data-f="disc">${esc(it.disc)}</div>
+ <div class="r" contenteditable inputmode="decimal" data-f="disc">${esc(it.disc)}</div>
  <div class="a"><button class="x" onclick="delItem(${i})" title="Remove item">×</button><span class="av">${(it.qty||it.rate)?fmt(amt(it)):''}</span></div></div>`}
 
 function newPage(no){
@@ -261,18 +266,21 @@ function paginate(){
   calc();
 }
 
+function core(its,ig,ron){
+  let sub=0,qty=0,half=0,full=0;
+  its.forEach(it=>{const r=amt(it),k=num(it.gst);sub+=r;qty+=num(it.qty);if(k>0){half+=r*k/200;full+=r*k/100;}});
+  sub=r2(sub);half=r2(half);full=r2(full);
+  let tot=r2(sub+(ig?full:half*2)),ro=0;
+  if(ron){const t=Math.round(tot);ro=r2(t-tot);tot=t;}
+  return {sub,half,igv:full,ig,ro,ron,tot,qty};
+}
 function totals(){
-  let sub=0,qty=0,g={};
-  items.forEach(it=>{const r=amt(it);sub+=r;qty+=num(it.qty);const k=num(it.gst);g[k]=(g[k]||0)+r*k/200;});
-  sub=Math.round(sub*100)/100;
-  let half=0;Object.keys(g).forEach(k=>{if(+k>0)half+=g[k]});half=Math.round(half*100)/100;
-  let tax=0,h=`<div class="lb"></div><div class="vl">${fmt(sub)}</div>`;
-  if($('gt').value==='ig'){const v=Math.round(half*200)/100;tax=v;h+=`<div class="lb">IGST</div><div class="vl">${fmt(v)}</div>`;}
-  else{tax=half*2;h+=`<div class="lb">CGST</div><div class="vl">${fmt(half)}</div><div class="lb">SGST</div><div class="vl">${fmt(half)}</div>`;}
-  let tot=sub+tax,ro=0;const on=$('ro').checked;
-  if(on){ro=Math.round((Math.round(tot)-tot)*100)/100;tot=Math.round(tot);h+=`<div class="lb">Round Off</div><div class="vl">${ro<0?'-':''}${fmt(Math.abs(ro))}</div>`;}
-  tot=Math.round(tot*100)/100;
-  return {h,tot,qty};
+  const c=core(items,isIG(),$('ro').checked);
+  let h=`<div class="lb"></div><div class="vl">${fmt(c.sub)}</div>`;
+  if(c.ig)h+=`<div class="lb">IGST</div><div class="vl">${fmt(c.igv)}</div>`;
+  else h+=`<div class="lb">CGST</div><div class="vl">${fmt(c.half)}</div><div class="lb">SGST</div><div class="vl">${fmt(c.half)}</div>`;
+  if(c.ron)h+=`<div class="lb">Round Off</div><div class="vl">${c.ro<0?'-':''}${fmt(Math.abs(c.ro))}</div>`;
+  c.h=h;return c;
 }
 function calc(){
   document.querySelectorAll('.row.it').forEach(r=>{const it=items[+r.dataset.i];if(it)r.querySelector('.av').textContent=(it.qty||it.rate)?fmt(amt(it)):'';});
@@ -282,18 +290,19 @@ function calc(){
   $('tq').textContent=fq(t.qty)+' '+(same?items[0].per:'');
   $('ta').textContent='Rs. '+fmt(t.tot);{const e=$('ta');let z=13;e.style.fontSize=z+'px';while(e.scrollWidth>e.clientWidth+0.5&&z>8){z-=0.5;e.style.fontSize=z+'px';}}
   $('words').textContent='INR '+words(t.tot);
+  smartUI(t);
 }
 const ones=['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
 const tens=['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
 const two=n=>n<20?ones[n]:tens[Math.floor(n/10)]+(n%10?' '+ones[n%10]:'');
 const three=n=>(n>=100?ones[Math.floor(n/100)]+' Hundred'+(n%100?' ':''):'')+(n%100?two(n%100):'');
+function inW(n){const s=[];const cr=Math.floor(n/1e7);if(cr){s.push(inW(cr)+' Crore');n%=1e7;}
+  for(const [d,w] of [[1e5,'Lakh'],[1e3,'Thousand']]){const x=Math.floor(n/d);if(x){s.push(two(x)+' '+w);n%=d;}}
+  if(n)s.push(three(n));return s.join(' ');}
 function words(v){
-  let r=Math.floor(v),p=Math.round((v-r)*100);
+  v=Math.abs(+v||0);let r=Math.floor(v+1e-9),p=Math.round((v-r)*100);if(p>=100){r++;p=0;}
   if(!r&&!p)return 'Zero Only';
-  let s=[];
-  for(const [d,n] of [[10000000,'Crore'],[100000,'Lakh'],[1000,'Thousand']]){const x=Math.floor(r/d);if(x){s.push(two(x)+' '+n);r%=d}}
-  if(r)s.push(three(r));
-  let out=s.join(' ');
+  let out=r?inW(r):'';
   if(p)out+=(out?' and ':'')+two(p)+' Paise';
   return out+' Only';
 }
@@ -305,11 +314,14 @@ function addItem(){
   if(e){e.scrollIntoView({block:'center'});e.querySelector('[data-f=name]').focus();}
 }
 function delItem(i){items.splice(i,1);paginate();save()}
-function newBill(){ask('Start a new bill? Items and invoice details (not your company details) will be cleared.',doNewBill)}
+function newBill(){ask('Start a new bill? The current bill is saved in Bills first. Items and invoice details are cleared (your company and party details stay).',doNewBill,'Yes, new bill')}
 function doNewBill(){
-  curId=null;
-  items=[];['invno','date','dn','mop','ref','oref','bono','bodt','ddn','dndt','dthr','dest','lr','veh','tod'].forEach(k=>F[k]='');
-  setDate(new Date().toISOString().slice(0,10),true);addItem();
+  let msg='';
+  if(clean(F.invno)&&items.some(x=>x.name.trim()&&num(x.qty))){saveBill();msg='Bill '+F.invno+' saved in Bills. ';}
+  const prev=F.invno;
+  curId=null;items=[];MK.forEach(k=>F[k]='');
+  setDate(today(),true);F.invno=nextInv(prev);addItem();
+  toast(msg+'New bill '+F.invno+' started.');
 }
 function setDate(v,skip){
   if(!v)return;const d=new Date(v+'T00:00:00');
@@ -317,15 +329,16 @@ function setDate(v,skip){
   F.date=String(d.getDate()).padStart(2,'0')+'-'+m[d.getMonth()]+'-'+String(d.getFullYear()).slice(2);
   document.querySelectorAll('[data-k=date]').forEach(e=>e.textContent=F.date);save();
 }
-function save(){try{localStorage.setItem(KEY,JSON.stringify({f:F,items,ro:$('ro').checked,gt:$('gt').value,a141:1,bid:BILL_ID,cur:curId}));}catch(e){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify({f:F,items,ro:$('ro').checked,gt:$('gt').value,v:2,bid:BILL_ID,cur:curId}));}catch(e){storeWarn()}}
 function load(){
-  try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(!s)return;if(s.bid!==BILL_ID)return;
-    if(s.f)Object.assign(F,s.f);if(Array.isArray(s.items))items=s.items;$('ro').checked=s.ro!==false;if(s.gt)$('gt').value=s.gt;curId=s.cur||null;if(!s.a141)items.push({name:'GI Bolt Nut',desc:'10x40mm +2 Plain Washer + 1Spring washer',hsn:'73181500',gst:'18',qty:'7000',rate:'8.46',per:'Nos',disc:''});}catch(e){}
+  try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(!s||s.bid!==BILL_ID)return;
+    if(s.f)Object.assign(F,s.f);if(Array.isArray(s.items))items=s.items.map(fixIt);
+    $('ro').checked=s.ro!==false;if(s.gt)$('gt').value=(s.gt==='cs'&&!s.v)?'auto':s.gt;curId=s.cur||null;}catch(e){}
 }
 document.addEventListener('input',e=>{
   const t=e.target,row=t.closest&&t.closest('.row.it');
   if(row){const i=+row.dataset.i,f=t.dataset.f;
-    if(f){items[i][f]=t.innerText.replace(/\n/g,' ').trim();if(f==='per')row.querySelector('.u').textContent=items[i].per;calc();}}
+    if(f&&items[i]){items[i][f]=t.innerText.replace(/\n/g,' ').trim();if(f==='per')row.querySelector('.u').textContent=items[i].per;calc();}}
   else if(t.dataset&&t.dataset.k){F[t.dataset.k]=t.innerText.replace(/\n$/,'');
     document.querySelectorAll(`[data-k="${t.dataset.k}"]`).forEach(x=>{if(x!==t)x.textContent=F[t.dataset.k]});}
   save();
@@ -339,10 +352,10 @@ document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.closest&&e.
 /* ---------- Upload a bill (PDF / Word): take its items + Ship to / Bill to ---------- */
 const loadJS=u=>new Promise((ok,no)=>{if(document.querySelector('script[src="'+u+'"]'))return ok();const s=document.createElement('script');s.src=u;s.onload=ok;s.onerror=()=>no(new Error('Could not load the file reader. Check your internet connection and try again.'));document.head.appendChild(s);});
 const say=m=>{$('imp').textContent=m};
-function ask(msg,yes){
+function ask(msg,yes,lab){
   const b=$('imp');b.innerHTML='';
   const s=document.createElement('span'),y=document.createElement('button'),n=document.createElement('button');
-  s.textContent=msg;y.textContent='Yes, replace';y.className='pri';n.textContent='Cancel';
+  s.textContent=msg;y.textContent=lab||'Yes, replace';y.className='pri';n.textContent='Cancel';
   y.onclick=()=>{b.innerHTML='';yes()};n.onclick=()=>{b.innerHTML=''};
   b.append(s,y,n);
 }
@@ -469,7 +482,7 @@ async function importFile(inp){
 /* ---------- Bill history, backup, saved items & parties ---------- */
 const HK='durga_hist_v1',CK='durga_cat_v1';
 const rdJ=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}};
-const wrJ=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+const wrJ=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){storeWarn();return false}};
 let H=rdJ(HK,[]),CAT=rdJ(CK,{items:[],parties:[]}),curId=null,pnTab='bills';
 const cl=o=>JSON.parse(JSON.stringify(o));
 const ik=c=>((c.name||'')+'|'+(c.desc||'')).toLowerCase().trim();
@@ -480,13 +493,15 @@ function learn(){
   wrJ(CK,CAT);
 }
 function saveBill(){
-  const id=curId||('b'+Date.now());
+  let id=curId,msg='Bill saved in Bills.';const ex=H.find(b=>b.id===id);
+  if(ex&&ex.f&&ex.f.invno&&F.invno&&ex.f.invno!==F.invno){id=null;msg='Invoice no. changed, so it is saved as a new bill.';}
+  if(!id)id='b'+Date.now();noteInv(F.invno);
   const e=Object.assign({id,name:(F.invno||'No invoice no.')+' · '+(F.billn||''),at:Date.now()},cl({f:F,items:items,ro:$('ro').checked,gt:$('gt').value}));
   const i=H.findIndex(b=>b.id===id);if(i<0)H.unshift(e);else H[i]=e;
-  curId=id;wrJ(HK,H);learn();save();
+  curId=id;wrJ(HK,H);learn();save();return msg;
 }
 function loadSnap(b,id){
-  items=cl(b.items);Object.assign(F,cl(b.f));$('ro').checked=b.ro!==false;$('gt').value=b.gt||'cs';
+  items=cl(b.items||[]).map(fixIt);Object.assign(F,cl(b.f||{}));$('ro').checked=b.ro!==false;$('gt').value=b.gt||'cs';
   curId=id;paginate();save();
 }
 const bkText=()=>JSON.stringify({app:'durga-bill',v:1,hist:H,cat:CAT,sites:SITES});
@@ -508,8 +523,9 @@ function rp(){
   let h='<div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap"><button data-a="tab" data-id="bills" class="'+(pnTab==='bills'?'pri':'')+'">Saved bills</button><button data-a="tab" data-id="cat" class="'+(pnTab==='cat'?'pri':'')+'">Items &amp; parties</button><span style="flex:1"></span><button data-a="close">Close</button></div>';
   if(pnTab==='bills'){
     h+='<p><button class="pri" data-a="save">Save current bill</button> <small>'+(curId?'(updates the saved copy)':'(adds a new saved bill)')+'</small></p>';
-    h+=H.length?H.map(b=>'<div class="r"><div><b>'+esc(b.name)+'</b><br><small>'+b.items.length+' items · saved '+d(b.at)+(b.id===curId?' · open now':'')+'</small></div><div><button data-a="open" data-id="'+b.id+'">Open</button><button data-a="copy" data-id="'+b.id+'">Copy as new</button><button data-a="del" data-id="'+b.id+'">Delete</button></div></div>').join(''):'<p><small>No saved bills yet. Press “Save current bill”.</small></p>';
-    h+='<hr><b>Backup</b><p><button data-a="back">Download backup file</button><button data-a="shw">Show backup text</button><label class="fl">Restore from file<input type="file" accept=".json" hidden onchange="restoreFile(this)"></label></p><textarea id="bk" rows="3" style="width:100%" placeholder="Backup text appears here. To restore, paste a backup text here and press Restore text."></textarea><p><button data-a="rst">Restore text</button> <small id="bkm"></small></p>';
+    h+=H.length>3?'<input id="bq" placeholder="Search bills: invoice, party, PO" oninput="fBills(this.value)" style="width:100%;margin:4px 0;padding:6px;font:inherit;font-size:14px">':'';
+    h+=H.length?H.map(b=>'<div class="r" data-s="'+escA(bSearch(b))+'"><div><b>'+esc(b.name)+'</b><br><small>'+b.items.length+' items · Rs. '+fmt(bTot(b))+' · saved '+d(b.at)+(b.id===curId?' · open now':'')+'</small></div><div><button data-a="open" data-id="'+b.id+'">Open</button><button data-a="copy" data-id="'+b.id+'">Copy as new</button><button data-a="del" data-id="'+b.id+'">Delete</button></div></div>').join(''):'<p><small>No saved bills yet. Press “Save current bill”.</small></p>';
+    h+='<hr><b>Backup</b><p><button data-a="back">Download backup file</button><button data-a="shw">Show backup text</button><button data-a="k-csv">Sales register (CSV)</button><label class="fl">Restore from file<input type="file" accept=".json" hidden onchange="restoreFile(this)"></label></p><textarea id="bk" rows="3" style="width:100%" placeholder="Backup text appears here. To restore, paste a backup text here and press Restore text."></textarea><p><button data-a="rst">Restore text</button> <small id="bkm"></small></p>';
   }else{
     h+='<p><button data-a="learn">Save this bill’s items &amp; parties</button> <small>Saved items and parties also appear as suggestions while you type a name on the bill.</small></p><b>Saved items</b>';
     h+=CAT.items.length?CAT.items.map((c,i)=>'<div class="r"><div><b>'+esc(c.name)+'</b> <small>'+esc(c.desc)+' · HSN '+esc(c.hsn)+' · '+esc(c.gst)+'% · '+esc(c.rate)+'/'+esc(c.per)+'</small></div><div><button data-a="addi" data-id="'+i+'">Add to bill</button><button data-a="deli" data-id="'+i+'">Delete</button></div></div>').join(''):'<p><small>None yet.</small></p>';
@@ -542,7 +558,7 @@ function sgHide(){sg.style.display='none'}
 function sgShow(t,list){
   if(!list.length){sgHide();return;}
   const r=t.getBoundingClientRect();sg.innerHTML='';
-  list.forEach(o=>{const d=document.createElement('div');d.className='o';d.innerHTML='<b>'+esc(o.a)+'</b> <small>'+esc(o.b)+'</small>';d.onmousedown=ev=>{ev.preventDefault();sgHide();o.pick();};sg.appendChild(d);});
+  list.forEach(o=>{const d=document.createElement('div');d.className='o';d.innerHTML='<b>'+esc(o.a)+'</b> <small>'+esc(o.b)+'</small>';d.onpointerdown=ev=>{ev.preventDefault();sgHide();o.pick();};sg.appendChild(d);});
   sg.style.left=Math.max(4,r.left)+'px';sg.style.top=(r.bottom+2)+'px';sg.style.display='block';
 }
 document.addEventListener('input',e=>{
@@ -691,7 +707,7 @@ function ewDefaults(){
     sname:m.sname||clean(F.shipn),sgst:m.sgst||sg,dist:m.dist||'0',veh:VEHRE.test(v)?v:'',trid:L.trid||'',trname:L.trname||'',tt:'auto',ver:L.ver||EWVER};
 }
 function buildEwb(f){
-  const W=[],E=[],ig=$('gt').value==='ig';
+  const W=[],E=[],ig=isIG();
   const same=norm(F.shipn+' '+addrLines(F.shipa).join(' '))===norm(F.billn+' '+addrLines(F.billa).join(' '))&&norm(gstinOf(F.shipa))===norm(gstinOf(F.billa));
   const tt=f.tt==='auto'?(same?1:2):+f.tt;
   let taxable=0,half=0,igs=0;
@@ -779,63 +795,152 @@ rp=function(){
   b.dataset.a='tab';b.dataset.id='ewb';b.textContent='E-way bill';bar.insertBefore(b,bar.querySelector('span'));
 };
 
-
-/* ---------- Direct PDF download: render the actual visible invoice pages ---------- */
-async function downloadPDF(){
-  const btn=$('pdfBtn'),label=btn.textContent,isLetter=document.body.classList.contains('lt');
-  const changed=[];
-  try{
-    btn.disabled=true;btn.textContent='Preparing PDF…';
-    await loadJS('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
-    await loadJS('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
-    if(!window.html2canvas||!window.jspdf||!window.jspdf.jsPDF)throw new Error('PDF tools did not load. Check your internet connection.');
-    if(!isLetter)paginate();
-    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
-    if(document.fonts&&document.fonts.ready)await document.fonts.ready;
-    const targets=isLetter?[$('lp')]:[...document.querySelectorAll('.wrap .paper')];
-    const usable=targets.filter(el=>el&&el.getBoundingClientRect().width>0&&el.getBoundingClientRect().height>0);
-    if(!usable.length)throw new Error('No visible bill page was found. Switch back to the bill and try again.');
-    const PDF=window.jspdf.jsPDF;
-    const pdf=new PDF({orientation:'portrait',unit:'mm',format:'a4',compress:true});
-    for(let i=0;i<usable.length;i++){
-      const el=usable[i];
-      changed.push({el,zoom:el.style.zoom,transform:el.style.transform,margin:el.style.margin});
-      el.style.setProperty('zoom','1','important');
-      el.style.setProperty('transform','none','important');
-      el.style.setProperty('margin','0','important');
-      const canvas=await window.html2canvas(el,{
-        scale:2,backgroundColor:'#ffffff',useCORS:true,allowTaint:false,
-        logging:false,windowWidth:1200,windowHeight:1600,
-        width:Math.ceil(el.getBoundingClientRect().width),
-        height:Math.ceil(el.getBoundingClientRect().height),
-        scrollX:0,scrollY:0
-      });
-      if(canvas.width<100||canvas.height<100)throw new Error('The bill page could not be captured.');
-      // Guard against a white/empty canvas instead of silently saving a blank PDF.
-      const ctx=canvas.getContext('2d',{willReadFrequently:true});
-      const pixels=ctx.getImageData(0,0,canvas.width,canvas.height).data;
-      let ink=0;
-      for(let j=0;j<pixels.length;j+=1600){
-        if(pixels[j]<245||pixels[j+1]<245||pixels[j+2]<245){ink++;if(ink>8)break;}
-      }
-      if(ink<3)throw new Error('The PDF preview came out blank. Please try again after the bill is fully visible.');
-      if(i>0)pdf.addPage('a4','portrait');
-      pdf.addImage(canvas.toDataURL('image/jpeg',0.96),'JPEG',0,0,210,297,undefined,'FAST');
-    }
-    const invoice=(F.invno||'Durga-Bill').replace(/[^\w-]+/g,'_');
-    pdf.save((isLetter?'Payment-Letter_':'Invoice_')+invoice+'.pdf');
-  }catch(err){
-    console.error('PDF download failed:',err);
-    alert(err&&err.message?err.message:'Could not create the PDF. Please try again.');
-  }finally{
-    changed.forEach(x=>{
-      x.el.style.zoom=x.zoom;x.el.style.transform=x.transform;x.el.style.margin=x.margin;
-    });
-    btn.disabled=false;btn.textContent=label;
-  }
+/* ---------- Smart checks, auto GST, invoice numbering, undo, share, sales register ---------- */
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const gstIn=t=>((String(t||'').toUpperCase().match(/GSTIN(?:\/UIN)?\s*[:\-\u2013\u2014]?\s*([0-9A-Z]{15})/)||[])[1])||'';
+const G36='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+function gstOk(g){g=String(g||'').toUpperCase();if(!GSTRE.test(g))return false;let s=0;for(let i=0;i<14;i++){const v=G36.indexOf(g[i])*(i%2?2:1);s+=Math.floor(v/36)+v%36;}return G36[(36-s%36)%36]===g[14];}
+const ourSC=f=>(gstIn(f.coadd)||CO.gstin).slice(0,2);
+const buyerSC=f=>{const g=gstIn(f.billa);if(g)return g.slice(0,2);const m=String(f.billa||'').match(/Code\s*:\s*(\d{2})/i);return m?m[1]:'';};
+function igFor(gt,f){if(gt==='ig')return true;if(gt==='cs')return false;const o=ourSC(f||{}),b=buyerSC(f||{});return !!(o&&b&&o!==b);}
+const isIG=()=>igFor($('gt').value,F);
+const numOk=v=>/^\s*[\d,]*\.?\d+\s*%?\s*$/.test(String(v||''));
+const realIt=x=>!!(String(x.name||'').trim()||num(x.qty)||num(x.rate));
+const GST_RATES=[0,0.1,0.25,1,1.5,3,5,6,7.5,12,18,28,40];
+var sw=0;function storeWarn(){if(Date.now()-sw<30000)return;sw=Date.now();toast('Phone storage is full. Download a backup (Bills > Backup) and delete old bills.');}
+function toast(m,lab,fn){const t=$('toast');if(!t)return;t.innerHTML='';const sp=document.createElement('span');sp.textContent=m;t.append(sp);
+  if(lab){const b=document.createElement('button');b.textContent=lab;b.onclick=()=>{t.classList.remove('on');fn();};t.append(b);}
+  t.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('on'),lab?8000:4500);}
+/* invoice numbering (financial year April to March) */
+const LIK='durga_lastinv_v1';
+function fyOf(ds){const m=String(ds||'').match(/^(\d{1,2})-([A-Za-z]{3})-(\d{2})$/);let y,mo;
+  if(m&&MON.indexOf(m[2].toLowerCase())>=0){y=2000+ +m[3];mo=MON.indexOf(m[2].toLowerCase());}else{const d=new Date();y=d.getFullYear();mo=d.getMonth();}
+  const st=mo>=3?y:y-1;return st+'-'+String(st+1).slice(2);}
+function noteInv(v){v=String(v||'').trim();if(!/^\d{4}-\d{2}\/\d+$/.test(v))return;try{const o=localStorage.getItem(LIK)||'';if(!o||v.length>o.length||(v.length===o.length&&v>o))localStorage.setItem(LIK,v);}catch(e){}}
+function nextInv(extra){const fy=fyOf(F.date);let mx=0,w=5,li='';try{li=localStorage.getItem(LIK)||''}catch(e){}
+  const c=H.filter(b=>b.id!==curId).map(b=>b.f&&b.f.invno);c.push(li,extra);
+  c.forEach(v=>{const m=String(v||'').trim().match(/^(\d{4}-\d{2})\/(\d+)$/);if(m&&m[1]===fy){mx=Math.max(mx,+m[2]);w=Math.max(w,m[2].length);}});
+  return fy+'/'+String(mx+1).padStart(w,'0');}
+/* bill check */
+function checks(t){
+  t=t||totals();const E=[],W=[];
+  if(!clean(F.invno))E.push('Invoice no. is empty.');
+  else if(H.some(b=>b.id!==curId&&b.f&&clean(b.f.invno)===clean(F.invno)))W.push('Invoice no. '+F.invno+' is already used by another saved bill.');
+  const dm=String(F.date||'').match(/^(\d{1,2})-([A-Za-z]{3})-(\d{2})$/);
+  if(!dm||MON.indexOf(dm[2].toLowerCase())<0||+dm[1]<1||+dm[1]>31)E.push('Date should look like 22-Nov-26 (use the Date picker at the top).');
+  else if(fyOf(F.date)!==(String(F.invno).match(/^(\d{4}-\d{2})\//)||[])[1]&&/^\d{4}-\d{2}\//.test(F.invno))W.push('Invoice no. year ('+F.invno.slice(0,7)+') does not match the bill date ('+fyOf(F.date)+').');
+  if(!clean(F.billn))E.push('Buyer (Bill to) name is empty.');
+  if(!clean(F.shipn))W.push('Consignee (Ship to) name is empty.');
+  const bg=gstIn(F.billa),sg=gstIn(F.shipa),og=gstIn(F.coadd);
+  if(!bg)W.push('Buyer GSTIN not found. Write it in Bill to as \u201cGSTIN/UIN : 08XXXXX0000X1ZX\u201d.');
+  else if(!gstOk(bg))E.push('Buyer GSTIN '+bg+' is wrong (check digit does not match). Check for a typing mistake.');
+  if(sg&&!gstOk(sg))E.push('Ship to GSTIN '+sg+' is wrong (check digit does not match).');
+  if(og&&!gstOk(og))E.push('Your GSTIN '+og+' is wrong.');
+  const real=items.filter(realIt);
+  if(!real.length)E.push('There are no items on the bill.');
+  items.forEach((x,i)=>{const n='Item '+(i+1)+(x.name.trim()?' ('+x.name.trim()+')':'');
+    if(!realIt(x)){W.push('Item '+(i+1)+' is empty. Remove it.');return;}
+    if(!x.name.trim())E.push(n+': name is empty.');
+    if(!numOk(x.qty)||!(num(x.qty)>0))E.push(n+': quantity is missing or not a number.');
+    if(!numOk(x.rate)||!(num(x.rate)>0))E.push(n+': rate is missing or not a number.');
+    if(!/^\d{4,8}$/.test(String(x.hsn).trim()))W.push(n+': HSN should be 4 to 8 digits.');
+    if(!numOk(x.gst))E.push(n+': GST rate is not a number.');else if(!GST_RATES.includes(num(x.gst)))W.push(n+': GST rate '+x.gst+'% is unusual.');
+    if(String(x.disc).trim()&&(!numOk(x.disc)||num(x.disc)>=100))E.push(n+': discount must be a number from 0 to 99.');
+  });
+  const bsc=buyerSC(F),osc=ourSC(F);
+  if($('gt').value!=='auto'&&bsc&&osc&&((bsc!==osc)!==t.ig))W.push(t.ig?'IGST is chosen but the buyer is in your state: CGST + SGST is correct. Tip: set GST to Auto.':'The buyer is in another state (code '+bsc+'): IGST is correct. Tip: set GST to Auto.');
+  if(t.tot>=50000&&!clean(F.veh))W.push('Bill is Rs. 50,000 or more, so an e-way bill is needed: enter the Motor Vehicle No.');
+  if(F.veh&&!VEHRE.test(String(F.veh).toUpperCase().replace(/[^A-Z0-9]/g,'')))W.push('Vehicle no. \u201c'+F.veh+'\u201d does not look right (like RJ04GB4748).');
+  return {E,W};
 }
+function smartUI(t){
+  const g=$('gt');if($('gtn'))$('gtn').textContent=g.value==='auto'?'\u2192 '+(t.ig?'IGST':'CGST+SGST'):'';
+  const dp=$('dp');if(dp&&document.activeElement!==dp){const m=String(F.date||'').match(/^(\d{1,2})-([A-Za-z]{3})-(\d{2})$/),mi=m?MON.indexOf(m[2].toLowerCase()):-1;dp.value=mi>=0?'20'+m[3]+'-'+String(mi+1).padStart(2,'0')+'-'+m[1].padStart(2,'0'):'';}
+  document.querySelectorAll('.row.it').forEach(r=>{const it=items[+r.dataset.i];if(!it)return;const any=realIt(it);
+    const mk=(f,c)=>{const e=r.querySelector('[data-f='+f+']');if(e)e.classList.toggle('bad',!!c);};
+    mk('name',any&&!it.name.trim());mk('qty',any&&(!numOk(it.qty)||!(num(it.qty)>0)));mk('rate',any&&(!numOk(it.rate)||!(num(it.rate)>0)));
+    mk('hsn',any&&!/^\d{4,8}$/.test(String(it.hsn).trim()));mk('gst',!numOk(it.gst));mk('disc',String(it.disc).trim()&&(!numOk(it.disc)||num(it.disc)>=100));});
+  document.querySelectorAll('[data-k=billa],[data-k=shipa]').forEach(e=>{const x=gstIn(F[e.dataset.k]);e.classList.toggle('bad',!!x&&!gstOk(x));});
+  const b=$('cbtn');if(b){const c=checks(t),n=c.E.length+c.W.length;b.textContent=n?'\u26a0 Check ('+n+')':'\u2713 Check';b.classList.toggle('warn',c.E.length>0);}
+}
+/* print: check first, then save to Bills */
+function doPrint(){if(!document.body.classList.contains('lt')&&clean(F.invno)&&items.some(x=>x.name.trim())){try{saveBill()}catch(e){}}window.print();}
+function printBill(){if(document.body.classList.contains('lt')){window.print();return;}
+  const c=checks();if(c.E.length){openPn('chk');toast('Please look at the problems before printing.');}else doPrint();}
+/* undo remove */
+let lastDel=null;
+delItem=function(i){if(!items[i])return;lastDel={it:items[i],i};items.splice(i,1);paginate();save();toast('Item '+(i+1)+' removed.','Undo',undoDel);};
+function undoDel(){if(!lastDel)return;items.splice(Math.min(lastDel.i,items.length),0,lastDel.it);lastDel=null;paginate();save();toast('Item restored.');}
+/* share a text summary (WhatsApp etc.) */
+function shareText(){const t=totals(),sp=v=>String(v||'').replace(/\s+/g,' ').trim(),L=[sp(F.co),'Tax Invoice '+sp(F.invno)+' dated '+sp(F.date),'To: '+sp(F.billn)];
+  if(clean(F.bono))L.push('PO: '+sp(F.bono));if(clean(F.veh))L.push('Vehicle: '+sp(F.veh));
+  items.filter(realIt).forEach((x,i)=>L.push((i+1)+'. '+sp(x.name)+(x.desc?' ('+sp(x.desc)+')':'')+': '+fq(num(x.qty))+' '+sp(x.per)+' x '+fmt(num(x.rate))+(num(x.disc)?' less '+num(x.disc)+'%':'')+' = '+fmt(amt(x))));
+  L.push('Taxable: Rs. '+fmt(t.sub));L.push(t.ig?'IGST: Rs. '+fmt(t.igv):'CGST: Rs. '+fmt(t.half)+', SGST: Rs. '+fmt(t.half));
+  if(t.ron&&t.ro)L.push('Round off: '+(t.ro<0?'-':'')+fmt(Math.abs(t.ro)));
+  L.push('Total: Rs. '+fmt(t.tot)+' (INR '+words(t.tot)+')');return L.join('\n');}
+function shareBill(){const s=shareText();
+  if(navigator.share){navigator.share({title:'Invoice '+(F.invno||''),text:s}).catch(()=>{});return;}
+  try{navigator.clipboard&&navigator.clipboard.writeText(s)}catch(e){}
+  window.open('https://wa.me/?text='+encodeURIComponent(s),'_blank');}
+/* saved bills helpers + sales register */
+const bTot=b=>core((b.items||[]).map(fixIt),igFor(b.gt,b.f||{}),b.ro!==false).tot;
+const bSearch=b=>[b.f&&b.f.invno,b.f&&b.f.billn,b.f&&b.f.shipn,b.f&&b.f.bono,b.name].join(' ').toLowerCase();
+function fBills(v){v=String(v||'').toLowerCase().trim();document.querySelectorAll('#pc .r[data-s]').forEach(r=>{r.style.display=!v||r.dataset.s.includes(v)?'':'none';});}
+function regCSV(){const qv=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+  const rows=[['Invoice No','Date','Buyer','Buyer GSTIN','State Code','PO','Taxable','CGST','SGST','IGST','Round Off','Invoice Total']];
+  [...H].sort((a,b)=>a.at-b.at).forEach(b=>{const f=b.f||{},ig=igFor(b.gt,f),c=core((b.items||[]).map(fixIt),ig,b.ro!==false),g=gstIn(f.billa);
+    rows.push([f.invno,f.date,f.billn,g,buyerSC(f),f.bono,c.sub.toFixed(2),(ig?0:c.half).toFixed(2),(ig?0:c.half).toFixed(2),(ig?c.igv:0).toFixed(2),c.ro.toFixed(2),c.tot.toFixed(2)]);});
+  return rows.map(r=>r.map(qv).join(',')).join('\r\n');}
+function dlCSV(){if(!H.length){toast('No saved bills yet.');return;}
+  try{const l=document.createElement('a');l.href=URL.createObjectURL(new Blob(['\ufeff'+regCSV()],{type:'text/csv'}));l.download='sales-register-'+today()+'.csv';document.body.appendChild(l);l.click();l.remove();toast('Sales register downloaded ('+H.length+' bills).');}
+  catch(e){const b=$('bk');if(b){b.value=regCSV();b.select();}toast('Download blocked: the register is in the text box, copy it.');}}
+/* check panel */
+function chkView(){
+  const t=totals(),c=checks(t),tab=(id,l)=>'<button data-a="tab" data-id="'+id+'" class="'+(pnTab===id?'pri':'')+'">'+l+'</button>';
+  const bx=(col,tt,l)=>'<div style="background:'+col+';color:#222;padding:6px 10px;border-radius:6px;margin:6px 0"><b>'+tt+'</b><ul style="margin:4px 0 0 18px;padding:0">'+l.map(w=>'<li>'+esc(w)+'</li>').join('')+'</ul></div>';
+  let h='<div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">'+tab('chk','Check')+tab('bills','Saved bills')+tab('cat','Items &amp; parties')+tab('sites','PO sites')+tab('ewb','E-way bill')+'<span style="flex:1"></span><button data-a="close">Close</button></div>';
+  h+=(c.E.length?bx('#f8d7da','Mistakes to fix:',c.E):'')+(c.W.length?bx('#fff3cd','Please check:',c.W):'')+(c.E.length||c.W.length?'':'<div style="background:#d4edda;color:#222;padding:6px 10px;border-radius:6px;margin:6px 0"><b>No problems found.</b> The bill is ready to print.</div>');
+  h+='<div style="font-size:13px;margin:8px 0">'+items.filter(realIt).length+' item(s) \u00b7 Taxable Rs. '+fmt(t.sub)+' \u00b7 '+(t.ig?'IGST '+fmt(t.igv):'CGST '+fmt(t.half)+' + SGST '+fmt(t.half))+' \u00b7 <b>Total Rs. '+fmt(t.tot)+'</b></div>';
+  h+='<p><button class="pri" data-a="k-print">'+(c.E.length?'Print anyway':'Print / Save PDF')+'</button><button data-a="k-save">Save to Bills</button><button data-a="k-share">Share (WhatsApp)</button></p>';
+  h+='<b>Quick fixes</b><p><button data-a="k-inv">Next invoice no. ('+esc(nextInv())+')</button><button data-a="k-today">Date = today</button><button data-a="k-gst">GST: Auto</button><button data-a="k-s2b">Copy Ship to \u2192 Bill to</button><button data-a="k-b2s">Copy Bill to \u2192 Ship to</button><button data-a="k-swap">Swap Ship to / Bill to</button><button data-a="k-empty">Remove empty rows</button>'+(lastDel?'<button data-a="k-undo">Undo last remove</button>':'')+'</p>';
+  $('pc').innerHTML=h;
+}
+const rp2=rp;
+rp=function(){
+  if(pnTab==='chk'){chkView();return;}
+  rp2();
+  const bar=$('pc').firstElementChild;if(!bar||bar.querySelector('[data-id=chk]'))return;
+  const b=document.createElement('button');b.dataset.a='tab';b.dataset.id='chk';b.textContent='Check';bar.insertBefore(b,bar.firstChild);
+};
+$('pn').addEventListener('click',e=>{
+  const b=e.target.closest('[data-a]');if(!b||!b.dataset.a.startsWith('k-'))return;
+  const a=b.dataset.a;
+  if(a==='k-print'){$('pn').classList.remove('on');setTimeout(doPrint,60);return;}
+  if(a==='k-csv'){dlCSV();return;}
+  if(a==='k-share'){shareBill();return;}
+  if(a==='k-save')toast(saveBill());
+  else if(a==='k-inv'){F.invno=nextInv();paginate();save();}
+  else if(a==='k-today')setDate(today());
+  else if(a==='k-gst'){$('gt').value='auto';save();}
+  else if(a==='k-s2b'){F.billn=F.shipn;F.billa=F.shipa;paginate();save();}
+  else if(a==='k-b2s'){F.shipn=F.billn;F.shipa=F.billa;paginate();save();}
+  else if(a==='k-swap'){[F.shipn,F.billn]=[F.billn,F.shipn];[F.shipa,F.billa]=[F.billa,F.shipa];paginate();save();}
+  else if(a==='k-empty'){const n=items.length;items=items.filter(realIt);paginate();save();toast('Removed '+(n-items.length)+' empty row(s).');}
+  else if(a==='k-undo')undoDel();
+  calc();rp();
+});
+/* typing helpers: plain-text paste, no line breaks in one-line fields, Ctrl/Cmd+S saves */
+const ONE=MK.concat(['co','shipn','billn','pan','bank','acno','ifsc','forco']);
+document.addEventListener('paste',e=>{const t=e.target&&e.target.closest?e.target.closest('[contenteditable]'):null;if(!t)return;
+  e.preventDefault();let x=(e.clipboardData||window.clipboardData).getData('text/plain')||'';
+  if(t.closest('.row.it')||ONE.includes(t.dataset.k))x=x.replace(/\s*\n\s*/g,' ').trim();
+  document.execCommand('insertText',false,x);});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&e.target.dataset&&ONE.includes(e.target.dataset.k))e.preventDefault();
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault();toast(saveBill());}
+});
 
-window.addEventListener('beforeprint',()=>{if(!document.body.classList.contains('lt'))paginate();});
+window.addEventListener('beforeprint',()=>{if(!document.body.classList.contains('lt')){paginate();if(clean(F.invno)&&items.some(x=>x.name.trim())){try{saveBill()}catch(e){}}}});
 
 load();paginate();
 </script>
